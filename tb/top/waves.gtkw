@@ -1,0 +1,32 @@
+[*]
+[*] GTKWave Analyzer v3.3.90 (w)1999-2018 BSI
+[*] Fri May 14 00:35:34 2021
+[*]
+[dumpfile] "/home/tom/projects/usb_system/tb/waves.vcd"
+[dumpfile_mtime] "Fri May 14 00:35:23 2021"
+[dumpfile_size] 9611036
+[savefile] "/home/tom/projects/usb_system/tb/waves.gtkw"
+[timestart] 0
+[size] 2789 1232
+[pos] -1 -1
+*-27.000000 26850000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb.
+[treeopen] tb.u_top.
+[treeopen] tb.u_top.cpu_u_cpu.
+[treeopen] tb.u_top.cpu_u_cpu.u_cpu.
+[sst_width] 565
+[signals_width] 230
+[sst_expanded] 1
+[sst_vpaned_height] 374
+@28
+tb.led0
+tb.led1
+tb.led2
+@22
+tb.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
+@8023
+tb.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
+@28
+tb.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_valid
+[pattern_trace] 1
+[pattern_trace] 0

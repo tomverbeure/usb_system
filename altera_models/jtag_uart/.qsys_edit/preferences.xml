@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preferences>
+ <debug showDebugMenu="0" />
+ <systemtable filter="All Interfaces">
+  <columns>
+   <connections preferredWidth="47" />
+   <irq preferredWidth="34" />
+   <name preferredWidth="221" />
+  </columns>
+ </systemtable>
+ <library
+   expandedCategories="Library/Interface Protocols,Library/University Program/Communications,Library,Library/Interface Protocols/Serial,Project,Library/University Program" />
+ <window width="2438" height="1273" x="545" y="382" />
+ <generation synthesis="VERILOG" />
+</preferences>

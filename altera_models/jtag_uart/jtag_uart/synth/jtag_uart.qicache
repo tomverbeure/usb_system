@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='us-ascii'?>
+<qsys_generation_info>
+<qsys_file path="/home/tom/projects/usb_sniffer/max10_small/altera_models/jtag_uart/jtag_uart.qsys" />
+<gen_dir path="/home/tom/projects/usb_sniffer/max10_small/db/ip/jtag_uart/" />
+<user_regen_policy value="Always Regenerate IP" />
+<actual_regen_policy value="Always Regenerate IP" />
+<gen_action value="IP Generation Attempted" />
+<gen_status value="IP Generation Succeeded" />
+</qsys_generation_info>

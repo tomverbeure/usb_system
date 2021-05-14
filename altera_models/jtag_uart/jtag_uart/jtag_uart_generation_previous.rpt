@@ -1,0 +1,16 @@
+Info: Starting: Create block symbol file (.bsf)
+Info: qsys-generate /home/tom/projects/usb_sniffer/max10_small/altera_models/jtag_uart/jtag_uart.qsys --block-symbol-file --output-directory=/home/tom/projects/usb_sniffer/max10_small/altera_models/jtag_uart/jtag_uart --family="MAX 10" --part=10M08SAU169C8G
+Progress: Loading jtag_uart/jtag_uart.qsys
+Progress: Reading input file
+Progress: Adding clk_0 [clock_source 19.1]
+Progress: Parameterizing module clk_0
+Progress: Adding jtag_uart_0 [altera_avalon_jtag_uart 19.1]
+Progress: Parameterizing module jtag_uart_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: jtag_uart.jtag_uart_0: JTAG UART IP input clock need to be at least double (2x) the operating frequency of JTAG TCK on board
+Warning: jtag_uart.jtag_uart_0: Interrupt sender jtag_uart_0.irq is not connected to an interrupt receiver
+Info: qsys-generate succeeded.
+Info: Finished: Create block symbol file (.bsf)

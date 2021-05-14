@@ -1,0 +1,32 @@
+Info: Starting: Create HDL design files for synthesis
+Info: qsys-generate C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart.qsys --synthesis=VERILOG --output-directory=C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart --family="Arria 10" --part=10AX115R4F40I3SG
+Progress: Loading jtag_uart/jtag_uart.qsys
+Progress: Reading input file
+Progress: Adding clk_0 [clock_source 17.0]
+Progress: Parameterizing module clk_0
+Progress: Adding jtag_uart_0 [altera_avalon_jtag_uart 17.0]
+Progress: Parameterizing module jtag_uart_0
+Progress: Building connections
+Progress: Parameterizing connections
+Progress: Validating
+Progress: Done reading input file
+Info: jtag_uart.jtag_uart_0: JTAG UART IP input clock need to be at least double (2x) the operating frequency of JTAG TCK on board
+Warning: jtag_uart.jtag_uart_0: Interrupt sender jtag_uart_0.irq is not connected to an interrupt receiver
+Info: jtag_uart: "Transforming system: jtag_uart"
+Info: jtag_uart: Running transform generation_view_transform
+Info: jtag_uart: Running transform generation_view_transform took 0.000s
+Info: jtag_uart_0: Running transform generation_view_transform
+Info: jtag_uart_0: Running transform generation_view_transform took 0.000s
+Info: jtag_uart: Running transform merlin_avalon_transform
+Info: jtag_uart: Running transform merlin_avalon_transform took 0.140s
+Info: jtag_uart: "Naming system components in system: jtag_uart"
+Info: jtag_uart: "Processing generation queue"
+Info: jtag_uart: "Generating: jtag_uart"
+Info: jtag_uart: "Generating: jtag_uart_altera_avalon_jtag_uart_170_wsv57wi"
+Info: jtag_uart_0: Starting RTL generation for module 'jtag_uart_altera_avalon_jtag_uart_170_wsv57wi'
+Info: jtag_uart_0:   Generation command is [exec C:/intelfpga/17.0/quartus/bin64/perl/bin/perl.exe -I C:/intelfpga/17.0/quartus/bin64/perl/lib -I C:/intelfpga/17.0/quartus/sopc_builder/bin/europa -I C:/intelfpga/17.0/quartus/sopc_builder/bin/perl_lib -I C:/intelfpga/17.0/quartus/sopc_builder/bin -I C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/common -I C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/altera_avalon_jtag_uart -- C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/altera_avalon_jtag_uart/generate_rtl.pl --name=jtag_uart_altera_avalon_jtag_uart_170_wsv57wi --dir=C:/Users/TVERBE~1/AppData/Local/Temp/alt8437_4269245272141601807.dir/0001_jtag_uart_0_gen/ --quartus_dir=C:/intelfpga/17.0/quartus --verilog --config=C:/Users/TVERBE~1/AppData/Local/Temp/alt8437_4269245272141601807.dir/0001_jtag_uart_0_gen//jtag_uart_altera_avalon_jtag_uart_170_wsv57wi_component_configuration.pl  --do_build_sim=0  ]
+Info: jtag_uart_0: Done RTL generation for module 'jtag_uart_altera_avalon_jtag_uart_170_wsv57wi'
+Info: jtag_uart: "Generating: altera_reset_controller"
+Info: jtag_uart: Done "jtag_uart" with 3 modules, 6 files
+Info: qsys-generate succeeded.
+Info: Finished: Create HDL design files for synthesis

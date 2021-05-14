@@ -1,0 +1,52 @@
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_TOOL_NAME "Qsys"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_TOOL_VERSION "19.1"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_TOOL_ENV "Qsys"
+set_global_assignment -library "jtag_uart" -name SOPCINFO_FILE [file join $::quartus(qip_path) "../../jtag_uart.sopcinfo"]
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name SLD_INFO "QSYS_NAME jtag_uart HAS_SOPCINFO 1 GENERATION_ID 1592959399"
+set_global_assignment -library "jtag_uart" -name MISC_FILE [file join $::quartus(qip_path) "../jtag_uart.cmp"]
+set_global_assignment -library "jtag_uart" -name SLD_FILE [file join $::quartus(qip_path) "jtag_uart.regmap"]
+set_global_assignment -library "jtag_uart" -name SLD_FILE [file join $::quartus(qip_path) "jtag_uart.debuginfo"]
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_TARGETED_DEVICE_FAMILY "MAX 10"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_GENERATED_DEVICE_FAMILY "{MAX 10}"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_QSYS_MODE "SYSTEM"
+set_global_assignment -name SYNTHESIS_ONLY_QIP ON
+set_global_assignment -library "jtag_uart" -name MISC_FILE [file join $::quartus(qip_path) "../../jtag_uart.qsys"]
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_NAME "anRhZ191YXJ0"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_DISPLAY_NAME "anRhZ191YXJ0"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_REPORT_HIERARCHY "On"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_INTERNAL "Off"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_VERSION "MS4w"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "QVVUT19HRU5FUkFUSU9OX0lE::MTU5Mjk1OTM5OQ==::QXV0byBHRU5FUkFUSU9OX0lE"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfRkFNSUxZ::TUFYIDEw::QXV0byBERVZJQ0VfRkFNSUxZ"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0U=::MTBNMDhTQVUxNjlDOEc=::QXV0byBERVZJQ0U="
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfU1BFRURHUkFERQ==::OA==::QXV0byBERVZJQ0VfU1BFRURHUkFERQ=="
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "QVVUT19DTEtfQ0xPQ0tfUkFURQ==::LTE=::QXV0byBDTE9DS19SQVRF"
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "QVVUT19DTEtfQ0xPQ0tfRE9NQUlO::LTE=::QXV0byBDTE9DS19ET01BSU4="
+set_global_assignment -entity "jtag_uart" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "QVVUT19DTEtfUkVTRVRfRE9NQUlO::LTE=::QXV0byBSRVNFVF9ET01BSU4="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_NAME "anRhZ191YXJ0X2p0YWdfdWFydF8w"
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_DISPLAY_NAME "SlRBRyBVQVJUIEludGVsIEZQR0EgSVA="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_REPORT_HIERARCHY "Off"
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_INTERNAL "Off"
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_AUTHOR "SW50ZWwgQ29ycG9yYXRpb24="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_VERSION "MTkuMQ=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "YWxsb3dNdWx0aXBsZUNvbm5lY3Rpb25z::ZmFsc2U=::QWxsb3cgbXVsdGlwbGUgY29ubmVjdGlvbnMgdG8gQXZhbG9uIEpUQUcgc2xhdmU="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "aHViSW5zdGFuY2VJRA==::MA==::aHViSW5zdGFuY2VJRA=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "cmVhZEJ1ZmZlckRlcHRo::NjQ=::QnVmZmVyIGRlcHRoIChieXRlcyk="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "cmVhZElSUVRocmVzaG9sZA==::OA==::SVJRIHRocmVzaG9sZA=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "c2ltSW50ZXJhY3RpdmVPcHRpb25z::Tk9fSU5URVJBQ1RJVkVfV0lORE9XUw==::T3B0aW9ucw=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "dXNlUmVnaXN0ZXJzRm9yUmVhZEJ1ZmZlcg==::ZmFsc2U=::Q29uc3RydWN0IHVzaW5nIHJlZ2lzdGVycyBpbnN0ZWFkIG9mIG1lbW9yeSBibG9ja3M="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "dXNlUmVnaXN0ZXJzRm9yV3JpdGVCdWZmZXI=::ZmFsc2U=::Q29uc3RydWN0IHVzaW5nIHJlZ2lzdGVycyBpbnN0ZWFkIG9mIG1lbW9yeSBibG9ja3M="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "dXNlUmVsYXRpdmVQYXRoRm9yU2ltRmlsZQ==::ZmFsc2U=::dXNlUmVsYXRpdmVQYXRoRm9yU2ltRmlsZQ=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "d3JpdGVCdWZmZXJEZXB0aA==::NTEy::QnVmZmVyIGRlcHRoIChieXRlcyk="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "d3JpdGVJUlFUaHJlc2hvbGQ=::OA==::SVJRIHRocmVzaG9sZA=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "Y2xrRnJlcQ==::ODAwMDAwMDA=::Y2xrRnJlcQ=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "YXZhbG9uU3BlYw==::Mi4w::YXZhbG9uU3BlYw=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "bGVnYWN5U2lnbmFsQWxsb3c=::ZmFsc2U=::bGVnYWN5U2lnbmFsQWxsb3c="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "ZW5hYmxlSW50ZXJhY3RpdmVJbnB1dA==::ZmFsc2U=::ZW5hYmxlSW50ZXJhY3RpdmVJbnB1dA=="
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_COMPONENT_PARAMETER "ZW5hYmxlSW50ZXJhY3RpdmVPdXRwdXQ=::ZmFsc2U=::ZW5hYmxlSW50ZXJhY3RpdmVPdXRwdXQ="
+
+set_global_assignment -library "jtag_uart" -name VERILOG_FILE [file join $::quartus(qip_path) "jtag_uart.v"]
+
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_TOOL_NAME "altera_avalon_jtag_uart"
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_TOOL_VERSION "19.1"
+set_global_assignment -entity "jtag_uart_jtag_uart_0" -library "jtag_uart" -name IP_TOOL_ENV "Qsys"

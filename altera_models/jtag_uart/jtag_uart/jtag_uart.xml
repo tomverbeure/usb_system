@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deploy
+ date="2020.06.23.17:48:14"
+ outputDirectory="C:/p4hw/hw/gsync_r4/mouse_latency/usb_sniffer.2/max10_small/altera_models/jtag_uart/jtag_uart/">
+ <perimeter>
+  <parameter
+     name="AUTO_GENERATION_ID"
+     type="Integer"
+     defaultValue="0"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_UNIQUE_ID"
+     type="String"
+     defaultValue=""
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE_FAMILY"
+     type="String"
+     defaultValue="Arria 10"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE"
+     type="String"
+     defaultValue="10AX115R4F40I3SG"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_DEVICE_SPEEDGRADE"
+     type="String"
+     defaultValue="3"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLK_CLOCK_RATE"
+     type="Long"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLK_CLOCK_DOMAIN"
+     type="Integer"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <parameter
+     name="AUTO_CLK_RESET_DOMAIN"
+     type="Integer"
+     defaultValue="-1"
+     onHdl="0"
+     affectsHdl="1" />
+  <interface name="avbus" kind="avalon" start="0">
+   <property name="addressAlignment" value="NATIVE" />
+   <property name="addressGroup" value="0" />
+   <property name="addressSpan" value="2" />
+   <property name="addressUnits" value="WORDS" />
+   <property name="alwaysBurstMaxBurst" value="false" />
+   <property name="associatedClock" value="clk" />
+   <property name="associatedReset" value="reset" />
+   <property name="bitsPerSymbol" value="8" />
+   <property name="bridgedAddressOffset" value="0" />
+   <property name="bridgesToMaster" value="" />
+   <property name="burstOnBurstBoundariesOnly" value="false" />
+   <property name="burstcountUnits" value="WORDS" />
+   <property name="constantBurstBehavior" value="false" />
+   <property name="explicitAddressSpan" value="0" />
+   <property name="holdTime" value="0" />
+   <property name="interleaveBursts" value="false" />
+   <property name="isBigEndian" value="false" />
+   <property name="isFlash" value="false" />
+   <property name="isMemoryDevice" value="false" />
+   <property name="isNonVolatileStorage" value="false" />
+   <property name="linewrapBursts" value="false" />
+   <property name="maximumPendingReadTransactions" value="0" />
+   <property name="maximumPendingWriteTransactions" value="0" />
+   <property name="minimumUninterruptedRunLength" value="1" />
+   <property name="printableDevice" value="true" />
+   <property name="readLatency" value="0" />
+   <property name="readWaitStates" value="1" />
+   <property name="readWaitTime" value="1" />
+   <property name="registerIncomingSignals" value="false" />
+   <property name="registerOutgoingSignals" value="false" />
+   <property name="setupTime" value="0" />
+   <property name="timingUnits" value="Cycles" />
+   <property name="transparentBridge" value="false" />
+   <property name="wellBehavedWaitrequest" value="false" />
+   <property name="writeLatency" value="0" />
+   <property name="writeWaitStates" value="0" />
+   <property name="writeWaitTime" value="0" />
+   <port name="avbus_chipselect" direction="input" role="chipselect" width="1" />
+   <port name="avbus_address" direction="input" role="address" width="1" />
+   <port name="avbus_read_n" direction="input" role="read_n" width="1" />
+   <port name="avbus_readdata" direction="output" role="readdata" width="32" />
+   <port name="avbus_write_n" direction="input" role="write_n" width="1" />
+   <port name="avbus_writedata" direction="input" role="writedata" width="32" />
+   <port
+       name="avbus_waitrequest"
+       direction="output"
+       role="waitrequest"
+       width="1" />
+  </interface>
+  <interface name="clk" kind="clock" start="0">
+   <property name="clockRate" value="50000000" />
+   <property name="externallyDriven" value="false" />
+   <property name="ptfSchematicName" value="" />
+   <port name="clk_clk" direction="input" role="clk" width="1" />
+  </interface>
+  <interface name="reset" kind="reset" start="0">
+   <property name="associatedClock" value="" />
+   <property name="synchronousEdges" value="NONE" />
+   <port name="reset_reset_n" direction="input" role="reset_n" width="1" />
+  </interface>
+ </perimeter>
+ <entity kind="jtag_uart" version="1.0" name="jtag_uart">
+  <parameter name="AUTO_CLK_CLOCK_RATE" value="-1" />
+  <parameter name="AUTO_GENERATION_ID" value="1592959693" />
+  <parameter name="AUTO_DEVICE" value="10AX115R4F40I3SG" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Arria 10" />
+  <parameter name="AUTO_CLK_RESET_DOMAIN" value="-1" />
+  <parameter name="AUTO_CLK_CLOCK_DOMAIN" value="-1" />
+  <parameter name="AUTO_UNIQUE_ID" value="" />
+  <parameter name="AUTO_DEVICE_SPEEDGRADE" value="3" />
+  <generatedFiles>
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\synth\jtag_uart.v"
+       attributes="CONTAINS_INLINE_CONFIGURATION" />
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\synth\jtag_uart_cfg.v"
+       attributes="CONTAINS_INLINE_CONFIGURATION" />
+  </generatedFiles>
+  <childGeneratedFiles>
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\synth\jtag_uart.v"
+       attributes="CONTAINS_INLINE_CONFIGURATION" />
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\synth\jtag_uart_cfg.v"
+       attributes="CONTAINS_INLINE_CONFIGURATION" />
+  </childGeneratedFiles>
+  <sourceFiles>
+   <file
+       path="C:/p4hw/hw/gsync_r4/mouse_latency/usb_sniffer.2/max10_small/altera_models/jtag_uart/jtag_uart.qsys" />
+  </sourceFiles>
+  <childSourceFiles>
+   <file
+       path="C:/intelfpga/17.0/ip/altera/merlin/altera_reset_controller/altera_reset_controller_hw.tcl" />
+   <file
+       path="C:/intelfpga/17.0/ip/altera/sopc_builder_ip/altera_avalon_jtag_uart/altera_avalon_jtag_uart_hw.tcl" />
+  </childSourceFiles>
+  <messages>
+   <message level="Info" culprit="jtag_uart">"Generating: jtag_uart"</message>
+   <message level="Info" culprit="jtag_uart">"Generating: altera_reset_controller"</message>
+   <message level="Info" culprit="jtag_uart">"Generating: jtag_uart_altera_avalon_jtag_uart_170_wsv57wi"</message>
+   <message level="Info" culprit="jtag_uart_0">Starting RTL generation for module 'jtag_uart_altera_avalon_jtag_uart_170_wsv57wi'</message>
+   <message level="Info" culprit="jtag_uart_0">  Generation command is [exec C:/intelfpga/17.0/quartus/bin64/perl/bin/perl.exe -I C:/intelfpga/17.0/quartus/bin64/perl/lib -I C:/intelfpga/17.0/quartus/sopc_builder/bin/europa -I C:/intelfpga/17.0/quartus/sopc_builder/bin/perl_lib -I C:/intelfpga/17.0/quartus/sopc_builder/bin -I C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/common -I C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/altera_avalon_jtag_uart -- C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/altera_avalon_jtag_uart/generate_rtl.pl --name=jtag_uart_altera_avalon_jtag_uart_170_wsv57wi --dir=C:/Users/TVERBE~1/AppData/Local/Temp/alt8437_4269245272141601807.dir/0001_jtag_uart_0_gen/ --quartus_dir=C:/intelfpga/17.0/quartus --verilog --config=C:/Users/TVERBE~1/AppData/Local/Temp/alt8437_4269245272141601807.dir/0001_jtag_uart_0_gen//jtag_uart_altera_avalon_jtag_uart_170_wsv57wi_component_configuration.pl  --do_build_sim=0  ]</message>
+   <message level="Info" culprit="jtag_uart_0">Done RTL generation for module 'jtag_uart_altera_avalon_jtag_uart_170_wsv57wi'</message>
+  </messages>
+ </entity>
+ <entity
+   kind="altera_avalon_jtag_uart"
+   version="17.0"
+   name="jtag_uart_altera_avalon_jtag_uart_170_wsv57wi">
+  <parameter name="readBufferDepth" value="64" />
+  <parameter name="clkFreq" value="50000000" />
+  <parameter name="useRelativePathForSimFile" value="false" />
+  <parameter name="hubInstanceID" value="0" />
+  <parameter name="enableInteractiveInput" value="false" />
+  <parameter name="avalonSpec" value="2.0" />
+  <parameter name="simInputCharacterStream" value="" />
+  <parameter name="readIRQThreshold" value="8" />
+  <parameter name="useRegistersForWriteBuffer" value="false" />
+  <parameter name="useRegistersForReadBuffer" value="false" />
+  <parameter name="simInteractiveOptions" value="NO_INTERACTIVE_WINDOWS" />
+  <parameter name="enableInteractiveOutput" value="false" />
+  <parameter name="writeIRQThreshold" value="8" />
+  <parameter name="writeBufferDepth" value="256" />
+  <parameter name="allowMultipleConnections" value="false" />
+  <parameter name="legacySignalAllow" value="false" />
+  <generatedFiles>
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\altera_avalon_jtag_uart_170\synth\jtag_uart_altera_avalon_jtag_uart_170_wsv57wi.v"
+       attributes="" />
+  </generatedFiles>
+  <childGeneratedFiles>
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\altera_avalon_jtag_uart_170\synth\jtag_uart_altera_avalon_jtag_uart_170_wsv57wi.v"
+       attributes="" />
+  </childGeneratedFiles>
+  <sourceFiles>
+   <file
+       path="C:/intelfpga/17.0/ip/altera/sopc_builder_ip/altera_avalon_jtag_uart/altera_avalon_jtag_uart_hw.tcl" />
+  </sourceFiles>
+  <childSourceFiles/>
+  <instantiator instantiator="jtag_uart" as="jtag_uart_0" />
+  <messages>
+   <message level="Info" culprit="jtag_uart">"Generating: jtag_uart_altera_avalon_jtag_uart_170_wsv57wi"</message>
+   <message level="Info" culprit="jtag_uart_0">Starting RTL generation for module 'jtag_uart_altera_avalon_jtag_uart_170_wsv57wi'</message>
+   <message level="Info" culprit="jtag_uart_0">  Generation command is [exec C:/intelfpga/17.0/quartus/bin64/perl/bin/perl.exe -I C:/intelfpga/17.0/quartus/bin64/perl/lib -I C:/intelfpga/17.0/quartus/sopc_builder/bin/europa -I C:/intelfpga/17.0/quartus/sopc_builder/bin/perl_lib -I C:/intelfpga/17.0/quartus/sopc_builder/bin -I C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/common -I C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/altera_avalon_jtag_uart -- C:/intelfpga/17.0/quartus/../ip/altera/sopc_builder_ip/altera_avalon_jtag_uart/generate_rtl.pl --name=jtag_uart_altera_avalon_jtag_uart_170_wsv57wi --dir=C:/Users/TVERBE~1/AppData/Local/Temp/alt8437_4269245272141601807.dir/0001_jtag_uart_0_gen/ --quartus_dir=C:/intelfpga/17.0/quartus --verilog --config=C:/Users/TVERBE~1/AppData/Local/Temp/alt8437_4269245272141601807.dir/0001_jtag_uart_0_gen//jtag_uart_altera_avalon_jtag_uart_170_wsv57wi_component_configuration.pl  --do_build_sim=0  ]</message>
+   <message level="Info" culprit="jtag_uart_0">Done RTL generation for module 'jtag_uart_altera_avalon_jtag_uart_170_wsv57wi'</message>
+  </messages>
+ </entity>
+ <entity
+   kind="altera_reset_controller"
+   version="17.0"
+   name="altera_reset_controller">
+  <generatedFiles>
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\altera_reset_controller_170\synth\altera_reset_controller.v"
+       attributes="" />
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\altera_reset_controller_170\synth\altera_reset_synchronizer.v"
+       attributes="" />
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\altera_reset_controller_170\synth\altera_reset_controller.sdc"
+       attributes="" />
+  </generatedFiles>
+  <childGeneratedFiles>
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\altera_reset_controller_170\synth\altera_reset_controller.v"
+       attributes="" />
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\altera_reset_controller_170\synth\altera_reset_synchronizer.v"
+       attributes="" />
+   <file
+       path="C:\p4hw\hw\gsync_r4\mouse_latency\usb_sniffer.2\max10_small\altera_models\jtag_uart\jtag_uart\altera_reset_controller_170\synth\altera_reset_controller.sdc"
+       attributes="" />
+  </childGeneratedFiles>
+  <sourceFiles>
+   <file
+       path="C:/intelfpga/17.0/ip/altera/merlin/altera_reset_controller/altera_reset_controller_hw.tcl" />
+  </sourceFiles>
+  <childSourceFiles/>
+  <instantiator instantiator="jtag_uart" as="rst_controller" />
+  <messages>
+   <message level="Info" culprit="jtag_uart">"Generating: altera_reset_controller"</message>
+  </messages>
+ </entity>
+</deploy>

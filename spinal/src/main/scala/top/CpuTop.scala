@@ -11,6 +11,7 @@ import spinal.lib.com.jtag.Jtag
 
 import scala.collection.mutable.ArrayBuffer
 import cc._
+import usb._
 
 case class CpuTop(hasJtagUart : Boolean, hasUart : Boolean) extends Component {
 
@@ -20,6 +21,8 @@ case class CpuTop(hasJtagUart : Boolean, hasUart : Boolean) extends Component {
         val led_blue        = out(Bool)
 
         val uart            = if (hasUart) master(Uart()) else null
+
+        val usb_dev_apb     = master(Apb3(UsbDevice.getApb3Config()))
 
         val jtag            = slave(Jtag())
     }
@@ -109,6 +112,9 @@ case class CpuTop(hasJtagUart : Boolean, hasUart : Boolean) extends Component {
     // ctrl                                     0x11000
     // jtag_uart                                0x13000
     // uart                                     0x15000
+    // usb_device                               0x20000
+    
+    apbMapping += io.usb_dev_apb       -> (0x20000, 8 kB)
 
     //============================================================
     // Local APB decoder

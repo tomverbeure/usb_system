@@ -33,23 +33,42 @@ object Ulpi {
 
 }
 
+case class Ulpi() extends Bundle with IMasterSlave
+{
+    val clk         = Bool
+    val data        = TriStateArray(8)
+    val direction   = Bool
+    val stp         = Bool
+    val nxt         = Bool
+
+    // Master = Phy, since that's how it's defined in the spec.
+    override def asMaster: Unit = {
+        out(clk)
+        master(data)
+        out(direction)
+        in(stp)
+        out(nxt)
+    }
+
+    override def asSlave: Unit = {
+        super.asSlave()
+        master(data)        // Tri-state signals should always be master
+    }
+}
+
 case class UlpiInternal() extends Bundle with IMasterSlave
 {
     // direction  = external signal that indicates to the USB device/controller how the data is going.
     // data_ena   = internal signal that controls the IO pads of the ULPI data pins
-    val clk         = Bool
     val data_ena    = Bool
     val data_out    = Bits(8 bits)
     val data_in     = Bits(8 bits)
     val direction   = Bool            // 'dir' is a SpinalHDL reserved name...
     val stp         = Bool
     val nxt         = Bool
-    val reset       = Bool
 
     // Master = Phy, since that's how it's defined in the spec.
     override def asMaster: Unit = {
-        out(clk)
-
         // Yes, I hate that this is the opposite direction...
         in(data_ena)
         in(data_out)
@@ -58,7 +77,6 @@ case class UlpiInternal() extends Bundle with IMasterSlave
         out(direction)
         in(stp)
         out(nxt)
-        in(reset)
     }
 }
 

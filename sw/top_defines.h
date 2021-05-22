@@ -148,6 +148,36 @@
 #define UART_FRAME_STOP_FIELD_LENGTH                    1
 
 //============================================================
+// USB_ DEVICE
+//============================================================
+//
+#define USB_DEV_DEBUG_ADDR             0x00020010
+
+#define USB_DEV_DEBUG_FORCE_TERM_SELECT_FIELD_START                 0
+#define USB_DEV_DEBUG_FORCE_TERM_SELECT_FIELD_LENGTH                1
+
+#define USB_DEV_DEBUG_FORCE_TERM_SELECT_VALUE_FIELD_START           1
+#define USB_DEV_DEBUG_FORCE_TERM_SELECT_VALUE_FIELD_LENGTH          1
+
+#define USB_DEV_DEBUG_FORCE_SUSPEND_M_FIELD_START                   2
+#define USB_DEV_DEBUG_FORCE_SUSPEND_M_FIELD_LENGTH                  1
+
+#define USB_DEV_DEBUG_FORCE_SUSPEND_M_VALUE_FIELD_START             3
+#define USB_DEV_DEBUG_FORCE_SUSPEND_M_VALUE_FIELD_LENGTH            1
+
+#define USB_DEV_DEBUG_FORCE_XCVR_SELECT_FIELD_START                 4
+#define USB_DEV_DEBUG_FORCE_XCVR_SELECT_FIELD_LENGTH                1
+
+#define USB_DEV_DEBUG_FORCE_XCVR_SELECT_VALUE_FIELD_START           5
+#define USB_DEV_DEBUG_FORCE_XCVR_SELECT_VALUE_FIELD_LENGTH          2
+
+#define USB_DEV_DEBUG_FORCE_OP_MODE_FIELD_START                     7
+#define USB_DEV_DEBUG_FORCE_OP_MODE_FIELD_LENGTH                    1
+
+#define USB_DEV_DEBUG_FORCE_OP_MODE_VALUE_FIELD_START               8
+#define USB_DEV_DEBUG_FORCE_OP_MODE_VALUE_FIELD_LENGTH              2
+
+//============================================================
 // ONCHIP FLASH
 //============================================================
 

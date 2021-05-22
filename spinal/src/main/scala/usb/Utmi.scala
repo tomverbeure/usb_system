@@ -12,6 +12,20 @@ object Utmi {
         val NonDriving              = 1
         val DisableBitStuffNRZI     = 2
     }
+
+    object LineState extends SpinalEnum {
+        val SE0                     = 0
+        val J                       = 1
+        val K                       = 2
+        val SE1                     = 3
+    }
+
+    object XcvrSelect extends SpinalEnum {
+        val HS                      = 0
+        val FS                      = 1
+        val LS                      = 2
+        val LSSpecial               = 3
+    }
 }
 
 case class Utmi() extends Bundle with IMasterSlave

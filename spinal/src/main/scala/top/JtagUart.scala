@@ -31,13 +31,13 @@ class JtagUart extends Component {
     val u_jtag_uart = new jtag_uart()
     u_jtag_uart.clk_clk               <> ClockDomain.current.readClockWire
     u_jtag_uart.reset_reset_n         <> ClockDomain.current.readResetWire
-    u_jtag_uart.av_chipselect         <> av_chipselect
-    u_jtag_uart.av_address            <> av_address
-    u_jtag_uart.av_waitrequest        <> av_waitrequest
-    u_jtag_uart.av_write_n            <> av_write_n
-    u_jtag_uart.av_writedata          <> av_writedata
-    u_jtag_uart.av_read_n             <> av_read_n
-    u_jtag_uart.av_readdata           <> av_readdata
+    u_jtag_uart.avbus_chipselect      <> av_chipselect
+    u_jtag_uart.avbus_address         <> av_address
+    u_jtag_uart.avbus_waitrequest     <> av_waitrequest
+    u_jtag_uart.avbus_write_n         <> av_write_n
+    u_jtag_uart.avbus_writedata       <> av_writedata
+    u_jtag_uart.avbus_read_n          <> av_read_n
+    u_jtag_uart.avbus_readdata        <> av_readdata
 
     av_chipselect       := io.apb.PENABLE && io.apb.PSEL.orR
     av_address          := io.apb.PADDR(2)

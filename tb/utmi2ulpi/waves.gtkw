@@ -1,0 +1,86 @@
+[*]
+[*] GTKWave Analyzer v3.3.90 (w)1999-2018 BSI
+[*] Sun May 23 06:33:53 2021
+[*]
+[dumpfile] "/home/tom/projects/usb_system/tb/utmi2ulpi/waves.vcd"
+[dumpfile_mtime] "Sun May 23 06:33:50 2021"
+[dumpfile_size] 15387
+[savefile] "/home/tom/projects/usb_system/tb/utmi2ulpi/waves.gtkw"
+[timestart] 0
+[size] 1955 1407
+[pos] -1 -1
+*-23.000000 14930000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb.
+[sst_width] 223
+[signals_width] 457
+[sst_expanded] 1
+[sst_vpaned_height] 628
+@28
+tb.clk
+tb.reset
+@200
+-
+@28
+tb.utmi_term_select
+tb.utmi_xcvr_select[1:0]
+@24
+tb.cur_ulpi_state[4:0]
+@200
+-
+@28
+tb.ulpi_direction
+tb.ulpi_nxt
+tb.ulpi_stp
+@200
+-
+-
+@22
+tb.ulpi_reg_addr[7:0]
+tb.ulpi_reg_wdata[7:0]
+@200
+-
+@28
+tb.ulpi_data_ena
+@22
+tb.ulpi_data_in[7:0]
+tb.ulpi_data_out[7:0]
+@200
+-
+@28
+tb.reg_req
+tb.reg_req_done
+@29
+tb.reg_rd
+@22
+tb.reg_addr[7:0]
+tb.reg_wdata[7:0]
+tb.reg_rdata[7:0]
+@200
+-
+@800200
+-utmi2ulpi
+@820
+tb.u_utmi2ulpi.cur_state_string[127:0]
+@28
+tb.u_utmi2ulpi.turn_around
+@c00022
+tb.u_utmi2ulpi.reg_wr_data[7:0]
+@28
+(0)tb.u_utmi2ulpi.reg_wr_data[7:0]
+(1)tb.u_utmi2ulpi.reg_wr_data[7:0]
+(2)tb.u_utmi2ulpi.reg_wr_data[7:0]
+(3)tb.u_utmi2ulpi.reg_wr_data[7:0]
+(4)tb.u_utmi2ulpi.reg_wr_data[7:0]
+(5)tb.u_utmi2ulpi.reg_wr_data[7:0]
+(6)tb.u_utmi2ulpi.reg_wr_data[7:0]
+(7)tb.u_utmi2ulpi.reg_wr_data[7:0]
+@1401200
+-group_end
+@28
+tb.u_utmi2ulpi.func_ctrl_wr_pending
+@1000200
+-utmi2ulpi
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0

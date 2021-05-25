@@ -23,6 +23,7 @@ case class CpuTop(hasJtagUart : Boolean, hasUart : Boolean) extends Component {
         val uart            = if (hasUart) master(Uart()) else null
 
         val usb_dev_apb     = master(Apb3(UsbDevice.getApb3Config()))
+        val utmi2ulpi_apb   = master(Apb3(Utmi2Ulpi.getApb3Config()))
 
         val jtag            = slave(Jtag())
     }
@@ -112,8 +113,10 @@ case class CpuTop(hasJtagUart : Boolean, hasUart : Boolean) extends Component {
     // ctrl                                     0x11000
     // jtag_uart                                0x13000
     // uart                                     0x15000
+    // utmi2ulpi                                0x16000
     // usb_device                               0x20000
     
+    apbMapping += io.utmi2ulpi_apb     -> (0x16000, 4 kB)
     apbMapping += io.usb_dev_apb       -> (0x20000, 8 kB)
 
     //============================================================

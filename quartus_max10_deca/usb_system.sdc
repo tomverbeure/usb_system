@@ -42,6 +42,15 @@ set_time_format -unit ns -decimal_places 3
 create_clock -name {altera_reserved_tck} -period 100.000 -waveform { 0.000 50.000 } [get_ports {altera_reserved_tck}]
 create_clock -name {osc_clk_in} -period 20.000 -waveform { 0.000 10.000 } [get_ports {osc_clk_in}]
 create_clock -name {ulpi_clk} -period 16.600 -waveform { 0.000 8.300 } [get_ports {ulpi_clk}]
+#create_clock -name cpu_clk -period 20.000 [get_pins {u_pll|altpll_component|auto_generated|pll1|clk[0]}]
+#create_clock -name tap_clk -period 5.000 [get_pins {u_pll|altpll_component|auto_generated|pll1|clk[1]}]
+
+create_generated_clock -name cpu_clk -source {u_pll|altpll_component|auto_generated|pll1|inclk[0]} -divide_by 1 -multiply_by 1 -duty_cycle 50.00 { u_pll|altpll_component|auto_generated|pll1|clk[0] }
+create_generated_clock -name tap_clk -source {u_pll|altpll_component|auto_generated|pll1|inclk[0]} -divide_by 1 -multiply_by 4 -duty_cycle 50.00 { u_pll|altpll_component|auto_generated|pll1|clk[1] }
+create_generated_clock -name ulpi_clk_internal -source {u_ulpi_pll|altpll_component|auto_generated|pll1|inclk[0]} -divide_by 1 -multiply_by 1 -duty_cycle 50.00 -phase -120.0 { u_ulpi_pll|altpll_component|auto_generated|pll1|clk[0] }
+
+#derive_pll_clocks
+derive_clock_uncertainty
 
 
 #**************************************************************
@@ -66,17 +75,17 @@ create_clock -name {ulpi_clk} -period 16.600 -waveform { 0.000 8.300 } [get_port
 # Set Input Delay
 #**************************************************************
 
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  13.000 [get_ports {ulpi_data[*]}]
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  13.000 [get_ports {ulpi_direction}]
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  13.000 [get_ports {ulpi_nxt}]
+set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  9.000 [get_ports {ulpi_data[*]}]
+set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  9.000 [get_ports {ulpi_direction}]
+set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  9.000 [get_ports {ulpi_nxt}]
 
 
 #**************************************************************
 # Set Output Delay
 #**************************************************************
 
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  8.000 [get_ports {ulpi_data[*]}]
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  8.000 [get_ports {ulpi_stp}]
+set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  6.000 [get_ports {ulpi_data[*]}]
+set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  6.000 [get_ports {ulpi_stp}]
 
 
 #**************************************************************
@@ -104,8 +113,18 @@ set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [
 set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_valid}] 
 set_false_path -to [get_pins -nocase -compatibility_mode {*|alt_rst_sync_uq1|altera_reset_synchronizer_int_chain*|clrn}]
 
-set_false_path -from [get_clocks {ulpi_clk}] -to [get_clocks {osc_clk_in}]
 set_false_path -from [get_clocks {osc_clk_in}] -to [get_clocks {ulpi_clk}]
+set_false_path -from [get_clocks {ulpi_clk}] -to [get_clocks {osc_clk_in}]
+set_false_path -from [get_clocks {ulpi_clk}] -to [get_clocks {cpu_clk}]
+set_false_path -from [get_clocks {ulpi_clk}] -to [get_clocks {tap_clk}]
+
+set_false_path -from [get_clocks {cpu_clk}] -to [get_clocks {ulpi_clk}]
+set_false_path -from [get_clocks {cpu_clk}] -to [get_clocks {ulpi_clk_internal}]
+
+
+set_false_path -from [get_clocks {ulpi_clk_internal}] -to [get_clocks {cpu_clk}]
+set_false_path -from [get_clocks {ulpi_clk_internal}] -to [get_clocks {tap_clk}]
+
 
 #**************************************************************
 # Set Multicycle Path
@@ -130,4 +149,6 @@ set_false_path -from [get_clocks {osc_clk_in}] -to [get_clocks {ulpi_clk}]
 #**************************************************************
 # Set Input Transition
 #**************************************************************
+
+
 

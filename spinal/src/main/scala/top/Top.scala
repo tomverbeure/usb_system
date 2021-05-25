@@ -29,6 +29,7 @@ class Top(isSim: Boolean) extends Component
         val led0            = out(Bool)
         val led1            = out(Bool)
         val led2            = out(Bool)
+        val led3            = out(Bool)
 
         val jtag            = slave(Jtag())
 
@@ -42,9 +43,27 @@ class Top(isSim: Boolean) extends Component
 
     val clk_cpu       = Bool
     val clk_ulpi      = Bool
+    val clk_tap       = Bool
 
-    clk_cpu     := io.osc_clk_in
-    clk_ulpi    := io.ulpi.clk
+    //============================================================
+    // PLL
+    //============================================================
+
+    val u_pll = new pll()
+    u_pll.inclk0      <> io.osc_clk_in
+    u_pll.c0          <> clk_cpu
+    u_pll.c1          <> clk_tap
+
+    //============================================================
+    // ULPI PLL
+    //============================================================
+
+    val ulpi_pll_locked   = Bool
+
+    val u_ulpi_pll = new ulpi_pll()
+    u_ulpi_pll.inclk0      <> io.ulpi.clk
+    u_ulpi_pll.c0          <> clk_ulpi
+    u_ulpi_pll.locked      <> ulpi_pll_locked
 
     //============================================================
     // Create clk cpu 
@@ -120,6 +139,25 @@ class Top(isSim: Boolean) extends Component
         )
     )
 
+    //============================================================
+    // Fast clock for signal tap
+    //============================================================
+    val clkTapRawDomain = ClockDomain(
+        clock       = clk_tap, 
+        frequency   = FixedFrequency(200 MHz),
+        config      = ClockDomainConfig(
+            resetKind = BOOT
+        )
+    )
+
+    val led3 = new ClockingArea(clkTapRawDomain) {
+        val led3 = Reg(Bool) init(False)
+        led3  := ~led3;
+
+        io.led3   := led3
+    }
+
+
 
     //============================================================
     // CPU
@@ -150,12 +188,11 @@ class Top(isSim: Boolean) extends Component
         io.ulpi.data.write          := ulpi_internal.data_out
         io.ulpi.data.writeEnable    := B(8 bits, default -> ulpi_internal.data_ena)
         
-        val u_utmi2ulpi = new Utmi2Ulpi()
+        val u_utmi2ulpi = new Utmi2UlpiWithApb(clkCpuDomain)
+        u_utmi2ulpi.io.apb            <> cpu.u_cpu.io.utmi2ulpi_apb
         u_utmi2ulpi.io.ulpi           <> ulpi_internal
         u_utmi2ulpi.io.utmi           <> utmi
-        u_utmi2ulpi.io.func_reset     := False
-        u_utmi2ulpi.io.reg_rd_ena     := False
-        u_utmi2ulpi.io.reg_rd_addr    := 0
+        u_utmi2ulpi.io.pll_locked     <> ulpi_pll_locked
 
         val u_usb_device = new UsbDevice()
         u_usb_device.io.utmi          <> utmi

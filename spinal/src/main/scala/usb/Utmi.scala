@@ -33,7 +33,6 @@ case class Utmi() extends Bundle with IMasterSlave
     //============================================================
     // UTMI+ Level 0
     //============================================================
-    val clk             = Bool
 
     // Only support 8-bit data
     val tx_valid        = Bool
@@ -72,8 +71,6 @@ case class Utmi() extends Bundle with IMasterSlave
 
     // Master = Phy, since that's how it's defined in the spec.
     override def asMaster: Unit = {
-
-        out(clk)
 
         in(tx_valid)
         out(tx_ready)

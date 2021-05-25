@@ -26,10 +26,12 @@ case class Utmi2Ulpi() extends Component {
         // So simply defer it to higher authorities...
         val func_reset      = in(Bool)
 
-        val reg_rd_ena      = in(Bool)
-        val reg_rd_done     = out(Bool)
-        val reg_rd_addr     = in(UInt(5 bits))
-        val reg_rd_data     = out(Bits(8 bits))
+        val reg_req         = in(Bool)
+        val reg_req_done    = out(Bool)
+        val reg_rd          = in(Bool)
+        val reg_addr        = in(UInt(8 bits))
+        val reg_wdata       = in(Bits(8 bits))
+        val reg_rdata       = out(Bits(8 bits))
     }
 
     object UlpiState extends SpinalEnum {
@@ -55,11 +57,11 @@ case class Utmi2Ulpi() extends Component {
     val func_ctrl_diff =  ( (utmi_xcvr_select =/= io.utmi.xcvr_select) 
                           | (utmi_term_select =/= io.utmi.term_select) 
                           | (utmi_op_mode     =/= io.utmi.op_mode) 
-                          | (utmi_suspend_m   =/= io.utmi.suspend_m) )
+                          | (utmi_suspend_m   =/= io.utmi.suspend_m) 
+                          | (func_reset       =/= io.func_reset) )
 
-    val func_ctrl_wr_pending  = Reg(Bool) setWhen(func_ctrl_diff)
+    val func_ctrl_wr_pending  = Reg(Bool) init(True) setWhen(func_ctrl_diff)
 
-    val reg_rd_pending = Reg(Bool) init(False) setWhen(io.reg_rd_ena)
 
 //    io.ulpi.data_ena    := !turn_around && !io.ulpi.direction
     io.ulpi.data_ena    := !io.ulpi.direction
@@ -88,21 +90,22 @@ case class Utmi2Ulpi() extends Component {
     io.utmi.tx_ready      := utmi_tx_ready
     io.utmi.line_state    := utmi_line_state
 
-    val reg_wr_data     = Reg(Bits(8 bits)) init(0)
+    val reg_req_pending = Reg(Bool) init(False) setWhen(io.reg_req && !RegNext(io.reg_req) ) clearWhen(!io.reg_req)
+    val reg_req_ongoing = Reg(Bool) init(False)
+    val reg_req_done    = Reg(Bool) init(False) clearWhen(!io.reg_req)
+    val reg_rdata       = Reg(Bits(8 bits)) init(0)
 
-    val reg_rd_done     = Reg(Bool) init(False)
-    val reg_rd_data     = Reg(Bits(8 bits)) init(0)
-
-    io.reg_rd_done  := reg_rd_done
-    io.reg_rd_data  := reg_rd_data
+    io.reg_req_done     := reg_req_done
+    io.reg_rdata        := reg_rdata
 
     val cur_state = Reg(UlpiState()) init(UlpiState.Idle)
 
     val reg_wr_ongoing = cur_state === UlpiState.RegWrWaitAddrAck || cur_state === UlpiState.RegWrWaitDataAck
+    val reg_wr_data     = Reg(Bits(8 bits)) init(0)
 
     ulpi_stp            := False
     utmi_tx_ready       := False
-    reg_rd_done         := False
+    utmi_rx_valid       := False
 
     when(turn_around){
 
@@ -120,7 +123,7 @@ case class Utmi2Ulpi() extends Component {
         }
 
     }
-    .elsewhen(io.ulpi.direction){
+    .elsewhen(io.ulpi.direction && cur_state =/= UlpiState.RegRdData){
         // No FSM needed when receiving data from ULPI
         when(!io.ulpi.nxt){
             // ULPI 3.8.1.2: RX CMD
@@ -177,132 +180,182 @@ case class Utmi2Ulpi() extends Component {
         }
     }
     .otherwise{
-        when(!io.ulpi.direction){
-            // We are driving the bus...
-            switch(cur_state){
-                is(UlpiState.Idle){
-                    // State changes have priority over transmitting data
-                    when(func_ctrl_wr_pending){
-                        ulpi_data_out       := B(UlpiCmdCode.RegWrite, 2 bits) ## B(UlpiAddr.FUNCTION_CONTROL, 6 bits)
-                        reg_wr_data         := False ## utmi_suspend_m ## func_reset ## utmi_op_mode ## utmi_term_select ## utmi_xcvr_select
+        switch(cur_state){
+            is(UlpiState.Idle){
+                // State changes have priority over transmitting data
+                when(func_ctrl_wr_pending){
+                    ulpi_data_out       := B(UlpiCmdCode.RegWrite, 2 bits) ## B(UlpiAddr.FUNCTION_CONTROL, 6 bits)
+                    reg_wr_data         := False ## utmi_suspend_m ## func_reset ## utmi_op_mode ## utmi_term_select ## utmi_xcvr_select
 
-                        cur_state           := UlpiState.RegWrWaitAddrAck
+                    cur_state           := UlpiState.RegWrWaitAddrAck
+                }
+                .elsewhen(io.utmi.tx_valid){
+                    // ULPI 3.8.1.1: TX_CMD
+                    ulpi_data_out       := B(UlpiCmdCode.Transmit, 2 bits) ## B(0, 2 bits) ## io.utmi.data_in(3 downto 0)
+                    cur_state           := UlpiState.TxStart
+                }
+                .elsewhen(reg_req_pending && io.reg_rd){
+                    ulpi_data_out       := B(UlpiCmdCode.RegRead, 2 bits) ## io.reg_addr(5 downto 0)
+                    reg_req_pending     := False
+                    reg_req_ongoing     := True
+
+                    cur_state           := UlpiState.RegRdWaitAddrAck
+                }
+                .elsewhen(reg_req_pending && !io.reg_rd){
+                    ulpi_data_out       := B(UlpiCmdCode.RegWrite, 2 bits) ## io.reg_addr(5 downto 0)
+                    reg_wr_data         := io.reg_wdata
+                    reg_req_pending     := False
+                    reg_req_ongoing     := True
+
+                    cur_state           := UlpiState.RegWrWaitAddrAck
+                }
+            }
+            is(UlpiState.TxStart){
+                // tx_valid should be high here at all times, because we didn't
+                // assert tx_ready in the previous cycle to pop the first byte
+
+                // Already pop tx data so that the next value is available
+                // when ulpi.nxt is asserted in the next stage.
+                utmi_tx_ready       := True
+                cur_state           := UlpiState.TxData
+            }
+            is(UlpiState.TxData){
+                when(io.ulpi.nxt){
+                    // We have a combinatorial path from ulpi.nxt to utmi.tx_ready.
+                    // We can break this with a skidding stage if really necessary...
+
+                    when(io.utmi.tx_valid && io.utmi.op_mode === B(OpMode.DisableBitStuffNRZI, 2 bits) && io.utmi.data_in === 0xff){
+                        // ULPI 3.8.2.3: USB Transmit Error
+                        ulpi_data_out       := io.utmi.data_in
+                        ulpi_stp            := True
+                        // According to figure 13, there is no extra TxReady. There should also
+                        // not be an extra TxValid. So go immediately back to Idle.
+                        cur_state           := UlpiState.Idle
                     }
                     .elsewhen(io.utmi.tx_valid){
-                        // ULPI 3.8.1.1: TX_CMD
-                        ulpi_data_out       := B(UlpiCmdCode.Transmit, 2 bits) ## B(0, 2 bits) ## io.utmi.data_in(3 downto 0)
-                        cur_state           := UlpiState.TxStart
+                        // 
+                        ulpi_data_out       := io.utmi.data_in
+                        utmi_tx_ready       := True
+                        cur_state           := UlpiState.TxData
                     }
-                    when(reg_rd_pending){
-                        ulpi_data_out       := B(UlpiCmdCode.RegRead, 2 bits) ## B(UlpiAddr.VENDOR_ID_LOW, 6 bits)
-                        reg_rd_pending      := False
-
-                        cur_state           := UlpiState.RegRdWaitAddrAck
-                    }
-
-                    // FIXME: Add option for register reads by upper layers
-                }
-                is(UlpiState.TxStart){
-                    // tx_valid should be high here at all times, because we didn't
-                    // assert tx_ready in the previous cycle to pop the first byte
-
-                    // Already pop tx data so that the next value is available
-                    // when ulpi.nxt is asserted in the next stage.
-                    utmi_tx_ready       := True
-                    cur_state           := UlpiState.TxData
-                }
-                is(UlpiState.TxData){
-                    when(io.ulpi.nxt){
-                        // We have a combinatorial path from ulpi.nxt to utmi.tx_ready.
-                        // We can break this with a skidding stage if really necessary...
-
-                        when(io.utmi.tx_valid && io.utmi.op_mode === B(OpMode.DisableBitStuffNRZI, 2 bits) && io.utmi.data_in === 0xff){
-                            // ULPI 3.8.2.3: USB Transmit Error
-                            ulpi_data_out       := io.utmi.data_in
-                            ulpi_stp            := True
-                            // According to figure 13, there is no extra TxReady. There should also
-                            // not be an extra TxValid. So go immediately back to Idle.
-                            cur_state           := UlpiState.Idle
-                        }
-                        .elsewhen(io.utmi.tx_valid){
-                            // 
-                            ulpi_data_out       := io.utmi.data_in
-                            utmi_tx_ready       := True
-                            cur_state           := UlpiState.TxData
-                        }
-                        .otherwise{
-                            ulpi_data_out       := 0
-                            ulpi_stp            := True
-
-                            // Assert tx_ready one more cycle because UTMI is stupid that way...
-                            utmi_tx_ready       := True
-                            cur_state           := UlpiState.Idle
-                        }
-                    }
-                }
-                is(UlpiState.RegWrWaitAddrAck){
-                    // ULPI 3.8.3.1
-                    when (io.ulpi.nxt){
-                        ulpi_data_out       := reg_wr_data
-
-                        cur_state           := UlpiState.RegWrWaitDataAck
-                    }
-                }
-                is(UlpiState.RegWrWaitDataAck){
-                    // ULPI 3.8.3.1
-                    when (io.ulpi.nxt){
-                        ulpi_stp            := True
+                    .otherwise{
                         ulpi_data_out       := 0
+                        ulpi_stp            := True
 
-                        when(func_ctrl_wr_pending && !func_ctrl_diff){
-                            func_ctrl_wr_pending  := False
-                        }
-
+                        // Assert tx_ready one more cycle because UTMI is stupid that way...
+                        utmi_tx_ready       := True
                         cur_state           := UlpiState.Idle
                     }
                 }
+            }
+            is(UlpiState.RegWrWaitAddrAck){
+                // ULPI 3.8.3.1
+                when (io.ulpi.nxt){
+                    ulpi_data_out       := reg_wr_data
 
-                is(UlpiState.RegRdWaitAddrAck){
-                    // ULPI 3.8.3.1
-                    when (io.ulpi.nxt){
-                        ulpi_data_out       := 0
+                    cur_state           := UlpiState.RegWrWaitDataAck
+                }
+            }
+            is(UlpiState.RegWrWaitDataAck){
+                // ULPI 3.8.3.1
+                when (io.ulpi.nxt){
+                    ulpi_stp            := True
+                    ulpi_data_out       := 0
 
-                        cur_state           := UlpiState.RegRdTurnaround
+                    when(func_ctrl_wr_pending && !func_ctrl_diff){
+                        func_ctrl_wr_pending  := False
                     }
-                }
+                    .elsewhen(reg_req_ongoing){
+                        reg_req_ongoing := False
+                        reg_req_done    := True
+                    }
 
-                is(UlpiState.RegRdTurnaround){
-                    cur_state           := UlpiState.RegRdData
-                }
-                is(UlpiState.RegRdData){
-                    reg_rd_data         := io.ulpi.data_in
-                    reg_rd_done         := True
                     cur_state           := UlpiState.Idle
                 }
-
             }
+
+            is(UlpiState.RegRdWaitAddrAck){
+                // ULPI 3.8.3.1
+                when (io.ulpi.nxt){
+                    ulpi_data_out       := 0
+
+                    cur_state           := UlpiState.RegRdData
+                }
+            }
+            is(UlpiState.RegRdTurnaround){
+                cur_state           := UlpiState.RegRdData
+            }
+            is(UlpiState.RegRdData){
+                reg_rdata           := io.ulpi.data_in
+                reg_req_ongoing     := False
+                reg_req_done        := True
+                cur_state           := UlpiState.Idle
+            }
+
         }
     }
 
-    def driveFrom(busCtrl: BusSlaveFactory, baseAddress: BigInt) = new Area {
-        
-      //============================================================
-      // ULPI Register Access 
-      //============================================================
-      val reg_req                   = busCtrl.createReadAndWrite(Bool,          0x00, 0)
-      val reg_rd_ena                = busCtrl.createReadAndWrite(Bool,          0x00, 1)
-      val reg_pending               = busCtrl.createReadOnly(    Bool,          0x00, 2)
-      val reg_addr                  = busCtrl.createReadAndWrite(Bits(8 bits),  0x00, 8)
-      val reg_wr_data               = busCtrl.createReadAndWrite(Bits(8 bits),  0x00, 16)
-      val reg_rd_data               = busCtrl.createReadOnly(    Bits(8 bits),  0x00, 24)
-    }
 }
+
+case class Utmi2UlpiWithApb(apbClkDomain : ClockDomain) extends Component {
+
+    val io = new Bundle {
+        val ulpi            = slave(UlpiInternal())
+        val utmi            = master(Utmi())
+
+        val pll_locked      = in(Bool)
+
+        val apb             = slave(Apb3(Utmi2Ulpi.getApb3Config()))
+    }
+
+    val u_utmi2ulpi = new Utmi2Ulpi()
+    u_utmi2ulpi.io.ulpi           <> io.ulpi
+    u_utmi2ulpi.io.utmi           <> io.utmi
+
+    val apb_regs = new ClockingArea(apbClkDomain) {
+        val busCtrl = Apb3SlaveFactory(io.apb)
+
+        //============================================================
+        // Config
+        //============================================================
+        val func_reset                = busCtrl.createReadAndWrite(Bool,          0x0000, 0) init(False)
+
+        //============================================================
+        // Status
+        //============================================================
+        val pll_locked                = busCtrl.createReadOnly    (Bool,          0x0004, 0) init(False)
+
+        pll_locked              := BufferCC(io.pll_locked)
+
+        //============================================================
+        // ULPI Register Access 
+        //============================================================
+        val reg_req                   = busCtrl.createReadAndWrite(Bool,          0x0008, 0)
+        val reg_req_done              = busCtrl.createReadOnly(    Bool,          0x0008, 1)
+        val reg_rd                    = busCtrl.createReadAndWrite(Bool,          0x0008, 2)
+        val reg_addr                  = busCtrl.createReadAndWrite(UInt(8 bits),  0x0008, 8)
+        val reg_wdata                 = busCtrl.createReadAndWrite(Bits(8 bits),  0x0008, 16)
+        val reg_rdata                 = busCtrl.createReadOnly(    Bits(8 bits),  0x0008, 24)
+
+        reg_req_done                := BufferCC(u_utmi2ulpi.io.reg_req_done)
+        reg_rdata                   := u_utmi2ulpi.io.reg_rdata.addTag(crossClockDomain)
+    }
+
+    u_utmi2ulpi.io.func_reset := BufferCC(apb_regs.func_reset)
+
+    u_utmi2ulpi.io.reg_req      := BufferCC(apb_regs.reg_req)
+    u_utmi2ulpi.io.reg_rd       := apb_regs.reg_rd.addTag(crossClockDomain)
+    u_utmi2ulpi.io.reg_addr     := apb_regs.reg_addr.addTag(crossClockDomain)
+    u_utmi2ulpi.io.reg_wdata    := apb_regs.reg_wdata.addTag(crossClockDomain)
+
+}
+
 
 object Utmi2UlpiVerilog{
     def main(args: Array[String]) {
 
         val config = SpinalConfig(anonymSignalUniqueness = true)
-        config.includeFormal.generateSystemVerilog({
+        config.includeFormal.generateVerilog({
             val toplevel = new Utmi2Ulpi()
             toplevel
         })

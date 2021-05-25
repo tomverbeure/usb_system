@@ -148,9 +148,43 @@
 #define UART_FRAME_STOP_FIELD_LENGTH                    1
 
 //============================================================
-// USB_ DEVICE
+// UTMI2ULPI
 //============================================================
-//
+
+#define UTMI2ULPI_CONFIG_ADDR       0x00016000
+
+#define UTMI2ULPI_CONFIG_FUNC_RESET_FIELD_START                 0
+#define UTMI2ULPI_CONFIG_FUNC_RESET_FIELD_LENGTH                1
+
+#define UTMI2ULPI_STATUS_ADDR       0x00016004
+
+#define UTMI2ULPI_STATUS_PLL_LOCKED_FIELD_START                 0
+#define UTMI2ULPI_STATUS_PLL_LOCKED_FIELD_LENGTH                1
+
+#define UTMI2ULPI_REG_ADDR          0x00016008
+
+#define UTMI2ULPI_REG_REQ_FIELD_START                           0
+#define UTMI2ULPI_REG_REQ_FIELD_LENGTH                          1
+
+#define UTMI2ULPI_REG_REQ_DONE_FIELD_START                      1
+#define UTMI2ULPI_REG_REQ_DONE_FIELD_LENGTH                     1
+
+#define UTMI2ULPI_REG_RD_FIELD_START                            2
+#define UTMI2ULPI_REG_RD_FIELD_LENGTH                           1
+
+#define UTMI2ULPI_REG_ADDR_FIELD_START                          8
+#define UTMI2ULPI_REG_ADDR_FIELD_LENGTH                         8
+
+#define UTMI2ULPI_REG_WDATA_FIELD_START                         16
+#define UTMI2ULPI_REG_WDATA_FIELD_LENGTH                        8
+
+#define UTMI2ULPI_REG_RDATA_FIELD_START                         24
+#define UTMI2ULPI_REG_RDATA_FIELD_LENGTH                        8
+
+//============================================================
+// USB DEVICE
+//============================================================
+
 #define USB_DEV_DEBUG_ADDR             0x00020010
 
 #define USB_DEV_DEBUG_FORCE_TERM_SELECT_FIELD_START                 0

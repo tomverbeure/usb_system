@@ -138,6 +138,13 @@ int main()
     while(!ulpi_pll_locked())
         ;
 
+    jtag_uart_tx_str("PLL locked.\n");
+    wait_ms(5000);
+
+    // Kick off overall ULPI FSM
+    jtag_uart_tx_str("ULPI enable.\n");
+    REG_WR_FIELD(UTMI2ULPI_CONFIG, ENABLE, 1);
+
     // Disable pulldown resistors.
     ulpi_reg_wr(ULPI_OTG_CONTROL_ADDR, 0x00);
 

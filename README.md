@@ -28,4 +28,21 @@
        [usb-serial](https://github.com/xaxaxa-dev/vna/tree/master/vhdl/third_party/fpga-usb-serial-20131205)
        and [ulpi_port](https://github.com/xaxaxa-dev/vna/blob/master/vhdl/third_party/ulpi_port.vhdl).
 
+* [USBCore](https://github.com/ObKo/USBCore)
+
+    Device controller. Most complete example out there?
+
+    Has 2 main branches: 
+    * the default one is 'old', which is a VHDL controller. Not updated in 6 years.
+    * the 'master' branch has last been updated 6 months ago. Written in Verilog.
+
+* [ULPI PMOD](https://github.com/ObKo/ULPI-Pmod)
+
+    * USB3300 ULPI PHY
+    * Uses 2 PMOD connectors, as expected.
+    * 2 layer PCB. Gerbers are included.
+    * Old version of KiCAD or incomplete library. Symbols in Schematc are not resolved... PCB loads fine.
+
 * [ULPI in OpenVizsla](https://github.com/openvizsla/ov_ftdi/blob/master/software/fpga/ov3/ovhw/ulpi.py)
+
+

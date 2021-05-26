@@ -22,6 +22,10 @@ case class Utmi2Ulpi() extends Component {
         val ulpi            = slave(UlpiInternal())
         val utmi            = master(Utmi())
 
+        // Overall function enable.
+        // Prevents the whole thing from starting to run before the CPU gives the go ahead.
+        val enable          = in(Bool)
+
         // The spec isn't very clear about when to use PHY reset of the FUNCTION_CONTROL register.
         // So simply defer it to higher authorities...
         val func_reset      = in(Bool)
@@ -182,8 +186,11 @@ case class Utmi2Ulpi() extends Component {
     .otherwise{
         switch(cur_state){
             is(UlpiState.Idle){
+                when(!io.enable){
+                    // Dummy...
+                }
                 // State changes have priority over transmitting data
-                when(func_ctrl_wr_pending){
+                .elsewhen(func_ctrl_wr_pending){
                     ulpi_data_out       := B(UlpiCmdCode.RegWrite, 2 bits) ## B(UlpiAddr.FUNCTION_CONTROL, 6 bits)
                     reg_wr_data         := False ## utmi_suspend_m ## func_reset ## utmi_op_mode ## utmi_term_select ## utmi_xcvr_select
 
@@ -318,7 +325,8 @@ case class Utmi2UlpiWithApb(apbClkDomain : ClockDomain) extends Component {
         //============================================================
         // Config
         //============================================================
-        val func_reset                = busCtrl.createReadAndWrite(Bool,          0x0000, 0) init(False)
+        val enable                    = busCtrl.createReadAndWrite(Bool,          0x0000, 0) init(False)
+        val func_reset                = busCtrl.createReadAndWrite(Bool,          0x0000, 1) init(False)
 
         //============================================================
         // Status
@@ -341,6 +349,7 @@ case class Utmi2UlpiWithApb(apbClkDomain : ClockDomain) extends Component {
         reg_rdata                   := u_utmi2ulpi.io.reg_rdata.addTag(crossClockDomain)
     }
 
+    u_utmi2ulpi.io.enable     := BufferCC(apb_regs.enable)
     u_utmi2ulpi.io.func_reset := BufferCC(apb_regs.func_reset)
 
     u_utmi2ulpi.io.reg_req      := BufferCC(apb_regs.reg_req)

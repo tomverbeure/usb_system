@@ -43,6 +43,16 @@
     * 2 layer PCB. Gerbers are included.
     * Old version of KiCAD or incomplete library. Symbols in Schematc are not resolved... PCB loads fine.
 
+* [lambdaUSB](https://github.com/lambdaconcept/lambdaUSB)
+
+    USB 2.0 device controller written in nMigen.
+
+    * "experimental stage and therefore incomplete."
+    * Has a GUI to create a configuration.
+
 * [ULPI in OpenVizsla](https://github.com/openvizsla/ov_ftdi/blob/master/software/fpga/ov3/ovhw/ulpi.py)
 
 
+* [Digilent Genesys2 - USB Device Demo](https://github.com/Digilent/Genesys2/tree/master/Projects/USB_Device_Demo)
+
+    This board has a TUSB1210.

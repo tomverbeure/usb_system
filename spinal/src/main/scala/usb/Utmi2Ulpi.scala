@@ -44,7 +44,6 @@ case class Utmi2Ulpi() extends Component {
         val TxData              = newElement()
         val RegWrWaitAddrAck    = newElement()
         val RegWrWaitDataAck    = newElement()
-        val RegWrStp            = newElement()
         val RegRdWaitAddrAck    = newElement()
         val RegRdTurnaround     = newElement()
         val RegRdData           = newElement()
@@ -67,13 +66,15 @@ case class Utmi2Ulpi() extends Component {
     val func_ctrl_wr_pending  = Reg(Bool) init(True) setWhen(func_ctrl_diff)
 
 
-//    io.ulpi.data_ena    := !turn_around && !io.ulpi.direction
     io.ulpi.data_ena    := !io.ulpi.direction
 
-    val ulpi_data_out   = Reg(Bits(8 bits)) init(0)
-    val ulpi_stp        = Reg(Bool) init(True)
-    io.ulpi.data_out    := ulpi_data_out
-    io.ulpi.stp         := ulpi_stp
+    val ulpi_data_in      = Bits(8 bits)
+    val ulpi_data_out     = Reg(Bits(8 bits)) init(0)
+    val ulpi_stp          = Reg(Bool) init(True)
+
+    ulpi_data_in          := io.ulpi.data_in
+    io.ulpi.data_out      := ulpi_data_out
+    io.ulpi.stp           := ulpi_stp
 
     val utmi_rx_active        = Reg(Bool) init(False)
     val utmi_rx_error         = Reg(Bool) init(False)
@@ -131,8 +132,8 @@ case class Utmi2Ulpi() extends Component {
         // No FSM needed when receiving data from ULPI
         when(!io.ulpi.nxt){
             // ULPI 3.8.1.2: RX CMD
-            utmi_line_state   := io.ulpi.data_in(1 downto 0)
-            switch(io.ulpi.data_in(3 downto 2)){
+            utmi_line_state   := ulpi_data_in(1 downto 0)
+            switch(ulpi_data_in(3 downto 2)){
                 is(0){
                     utmi_sess_end         := True
                     utmi_sess_valid       := False
@@ -154,7 +155,7 @@ case class Utmi2Ulpi() extends Component {
                     utmi_vbus_valid       := True
                 }
             }
-            switch(io.ulpi.data_in(5 downto 4)){
+            switch(ulpi_data_in(5 downto 4)){
                 is(0){
                     utmi_rx_active        := False
                     utmi_rx_error         := False
@@ -176,11 +177,11 @@ case class Utmi2Ulpi() extends Component {
                     utmi_host_disconnect  := False
                 }
             }
-            utmi_id_dig       := io.ulpi.data_in(6)
+            utmi_id_dig       := ulpi_data_in(6)
         }
         .otherwise{
             utmi_rx_valid     := True
-            utmi_rx_data      := io.ulpi.data_in
+            utmi_rx_data      := ulpi_data_in
         }
     }
     .otherwise{
@@ -293,7 +294,7 @@ case class Utmi2Ulpi() extends Component {
                 cur_state           := UlpiState.RegRdData
             }
             is(UlpiState.RegRdData){
-                reg_rdata           := io.ulpi.data_in
+                reg_rdata           := ulpi_data_in
                 reg_req_ongoing     := False
                 reg_req_done        := True
                 cur_state           := UlpiState.Idle

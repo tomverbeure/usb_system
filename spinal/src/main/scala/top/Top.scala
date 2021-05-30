@@ -49,23 +49,33 @@ class Top(isSim: Boolean) extends Component
     // PLL
     //============================================================
 
-    val u_pll = new pll()
-    u_pll.inclk0      <> io.osc_clk_in
-    u_pll.c0          <> clk_cpu
-    u_pll.c1          <> clk_tap
+    val pll = if (isSim) new Area{
+        clk_cpu   := io.osc_clk_in
+        clk_tap   := io.osc_clk_in
+    } 
+    else new Area {
+        val u_pll = new pll()
+        u_pll.inclk0      <> io.osc_clk_in
+        u_pll.c0          <> clk_cpu
+        u_pll.c1          <> clk_tap
+    }
 
     //============================================================
     // ULPI PLL
     //============================================================
-
     val ulpi_pll_locked   = Bool
 
-    val u_ulpi_pll = new ulpi_pll()
-    u_ulpi_pll.inclk0      <> io.ulpi.clk
-    //u_ulpi_pll.c0          <> clk_ulpi
-    u_ulpi_pll.locked      <> ulpi_pll_locked
+    val ulpi_pll = if (isSim) new Area {
+        clk_ulpi          := io.ulpi.clk
+        ulpi_pll_locked   := True
+    } else new Area {
+        clk_ulpi := io.ulpi.clk
 
-    clk_ulpi := io.ulpi.clk
+        val u_ulpi_pll = new ulpi_pll()
+        u_ulpi_pll.inclk0      <> io.ulpi.clk
+        //u_ulpi_pll.c0          <> clk_ulpi
+        u_ulpi_pll.locked      <> ulpi_pll_locked
+    }
 
     //============================================================
     // Create clk cpu 
@@ -166,7 +176,7 @@ class Top(isSim: Boolean) extends Component
     //============================================================
 
     val cpu = new ClockingArea(clkCpuDomain) {
-        val u_cpu = new CpuTop(hasJtagUart = !isSim, hasUart = false)
+        val u_cpu = new CpuTop(isSim = isSim, hasJtagUart = !isSim, hasUart = false)
         u_cpu.io.led_red        <> io.led0
         u_cpu.io.led_green      <> io.led1
         u_cpu.io.led_blue       <> io.led2

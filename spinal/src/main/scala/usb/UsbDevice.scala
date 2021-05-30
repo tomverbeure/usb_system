@@ -595,17 +595,17 @@ case class UsbDevice() extends Component {
       //============================================================
       // DEBUG 
       //============================================================
-      val force_term_select        = busCtrl.createReadAndWrite(Bool,            0x10, 0)
-      val force_term_select_value  = busCtrl.createReadAndWrite(Bool,            0x10, 1)
+      val force_term_select        = busCtrl.createReadAndWrite(Bool,            0x10, 0) init(False)
+      val force_term_select_value  = busCtrl.createReadAndWrite(Bool,            0x10, 1) init(False)
 
-      val force_suspend_m          = busCtrl.createReadAndWrite(Bool,            0x10, 2)
-      val force_suspend_m_value    = busCtrl.createReadAndWrite(Bool,            0x10, 3)
+      val force_suspend_m          = busCtrl.createReadAndWrite(Bool,            0x10, 2) init(False)
+      val force_suspend_m_value    = busCtrl.createReadAndWrite(Bool,            0x10, 3) init(True)
 
-      val force_xcvr_select        = busCtrl.createReadAndWrite(Bool,            0x10, 4)
-      val force_xcvr_select_value  = busCtrl.createReadAndWrite(Bits(2 bits),    0x10, 5)
+      val force_xcvr_select        = busCtrl.createReadAndWrite(Bool,            0x10, 4) init(False)
+      val force_xcvr_select_value  = busCtrl.createReadAndWrite(Bits(2 bits),    0x10, 5) init(0)
 
-      val force_op_mode            = busCtrl.createReadAndWrite(Bool,            0x10, 7)
-      val force_op_mode_value      = busCtrl.createReadAndWrite(Bits(2 bits),    0x10, 8)
+      val force_op_mode            = busCtrl.createReadAndWrite(Bool,            0x10, 7) init(False)
+      val force_op_mode_value      = busCtrl.createReadAndWrite(Bits(2 bits),    0x10, 8) init(0)
 
       io.force_term_select          := force_term_select.addTag(crossClockDomain)
       io.force_term_select_value    := force_term_select_value.addTag(crossClockDomain)

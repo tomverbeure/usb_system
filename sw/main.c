@@ -9,6 +9,8 @@
 
 #include "jtag_uart.h"
 
+int is_sim = 0;
+
 void trap()
 {
 }
@@ -130,6 +132,8 @@ void cmdline()
 
 int main() 
 {
+    is_sim = REG_RD_FIELD(MISC_STATUS, IS_SIM);
+
     const char hello[] = "Hello World!\n";
 
     jtag_uart_init();
@@ -139,7 +143,9 @@ int main()
         ;
 
     jtag_uart_tx_str("PLL locked.\n");
-    wait_ms(5000);
+
+    if (!is_sim)
+        wait_ms(5000);
 
     // Kick off overall ULPI FSM
     jtag_uart_tx_str("ULPI enable.\n");
@@ -153,13 +159,12 @@ int main()
 
     REG_WR(LED_DIR, 0xff);
 
-
     while(1){
         cmdline();
 
         REG_WR(LED_WRITE, 0x00);
-        wait_ms(300);
+        wait_ms(is_sim ? 0 : 300);
         REG_WR(LED_WRITE, 0xff);
-        wait_ms(100);
+        wait_ms(is_sim ? 0 : 100);
     }
 }

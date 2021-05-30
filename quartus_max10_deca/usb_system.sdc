@@ -41,6 +41,8 @@ set_time_format -unit ns -decimal_places 3
 create_clock -name {altera_reserved_tck} -period 100.000 -waveform { 0.000 50.000 } [get_ports {altera_reserved_tck}]
 create_clock -name {osc_clk_in} -period 20.000 -waveform { 0.000 10.000 } [get_ports {osc_clk_in}]
 create_clock -name {ulpi_clk} -period 16.600 -waveform { 0.0 8.3 } [get_ports {ulpi_clk}]
+create_clock -name {jtag_clk} -period 50.000 -waveform { 0.0 10 } [get_ports {jtag_clk}]
+
 
 #create_clock -name cpu_clk -period 20.000 [get_pins {u_pll|altpll_component|auto_generated|pll1|clk[0]}]
 #create_clock -name tap_clk -period 5.000 [get_pins {u_pll|altpll_component|auto_generated|pll1|clk[1]}]

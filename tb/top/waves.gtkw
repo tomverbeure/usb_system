@@ -1,32 +1,54 @@
 [*]
 [*] GTKWave Analyzer v3.3.90 (w)1999-2018 BSI
-[*] Fri May 14 00:35:34 2021
+[*] Sun May 30 06:18:45 2021
 [*]
-[dumpfile] "/home/tom/projects/usb_system/tb/waves.vcd"
-[dumpfile_mtime] "Fri May 14 00:35:23 2021"
-[dumpfile_size] 9611036
-[savefile] "/home/tom/projects/usb_system/tb/waves.gtkw"
-[timestart] 0
-[size] 2789 1232
+[dumpfile] "/home/tom/projects/usb_system/tb/top/waves.vcd"
+[dumpfile_mtime] "Sun May 30 06:18:20 2021"
+[dumpfile_size] 9211668
+[savefile] "/home/tom/projects/usb_system/tb/top/waves.gtkw"
+[timestart] 9596100
+[size] 2833 1690
 [pos] -1 -1
-*-27.000000 26850000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-15.000000 53515000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb.
 [treeopen] tb.u_top.
-[treeopen] tb.u_top.cpu_u_cpu.
 [treeopen] tb.u_top.cpu_u_cpu.u_cpu.
+[treeopen] tb.u_top.usb_u_utmi2ulpi.
 [sst_width] 565
-[signals_width] 230
+[signals_width] 581
 [sst_expanded] 1
-[sst_vpaned_height] 374
+[sst_vpaned_height] 605
 @28
 tb.led0
 tb.led1
 tb.led2
 @22
 tb.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
-@8023
+@8022
 tb.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
 @28
 tb.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_valid
+@200
+-
+@28
+tb.u_top.usb_u_utmi2ulpi.apb_regs_reg_req
+tb.u_top.usb_u_utmi2ulpi.apb_regs_reg_req_done
+@22
+tb.u_top.usb_u_utmi2ulpi.apb_regs_reg_addr[7:0]
+tb.u_top.usb_u_utmi2ulpi.apb_regs_reg_wdata[7:0]
+@28
+tb.u_top.usb_u_utmi2ulpi.apb_regs_reg_rd
+@22
+tb.u_top.usb_u_utmi2ulpi.apb_regs_reg_rdata[7:0]
+@200
+-
+@28
+tb.ulpi_clk
+@22
+tb.ulpi_data[7:0]
+@28
+tb.ulpi_direction
+tb.ulpi_nxt
+tb.ulpi_stp
 [pattern_trace] 1
 [pattern_trace] 0

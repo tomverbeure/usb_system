@@ -1,6 +1,6 @@
 
 
-VERILOG_FILES 		= tb.v jtag_uart.v ../../spinal/Top.v 
+VERILOG_FILES 		= tb.v jtag_uart.v ulpi_phy.v ../../spinal/Top.v 
 SW_FILES			= $(wildcard ../../spinal/Top.*.bin)
 SW_FILES_DST 		= $(notdir $(SW_FILES))
 

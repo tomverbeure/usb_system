@@ -82,6 +82,12 @@
 #define MISC_STATUS_HAS_JTAG_UART_FIELD_START           0
 #define MISC_STATUS_HAS_JTAG_UART_FIELD_LENGTH          1
 
+#define MISC_STATUS_HAS_UART_FIELD_START                1
+#define MISC_STATUS_HAS_UART_FIELD_LENGTH               1
+
+#define MISC_STATUS_IS_SIM_FIELD_START                  2
+#define MISC_STATUS_IS_SIM_FIELD_LENGTH                 1
+
 //============================================================
 // JTAG UART
 //============================================================

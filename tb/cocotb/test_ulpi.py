@@ -18,8 +18,7 @@ async def test_ulpi_simple(dut):
     cocotb.fork(osc_clk.start())  # Start the clock
 
     # 60MHz ULPI clock
-    ulpi_clk = Clock(dut.ulpi_clk, 16.6, units="ns")  
-    cocotb.fork(ulpi_clk.start())  # Start the clock
+    cocotb.fork(Clock(dut.ulpi_clk, 16.6, units="ns").start())
 
     ulpi_signals = ulpi.UlpiSignals(
             data2phy    = dut.ulpi_data2phy,
@@ -29,7 +28,7 @@ async def test_ulpi_simple(dut):
             nxt         = dut.ulpi_nxt
             )
 
-    ulpi_phy = ulpi.UlpiPhy(signals = ulpi_signals)
+    ulpi_phy = ulpi.UlpiPhy(dut, clock = dut.ulpi_clk, signals = ulpi_signals)
 
     for i in range(1000):
 #        val = random.randint(0, 1)

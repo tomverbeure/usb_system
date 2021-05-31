@@ -225,7 +225,7 @@ object TopVerilogSim {
 
         config.generateVerilog({
             val toplevel = new Top(isSim = true)
-            InOutWrapper(toplevel)
+            toplevel
         })
 
     }

@@ -50,6 +50,27 @@
     * "experimental stage and therefore incomplete."
     * Has a GUI to create a configuration.
 
+* [usb1_device](https://github.com/www-asics-ws/usb1_device)
+
+    * USB 1.1 Device IP Core by [ASICSs World Services](www.asics.ws)
+    * No CPU required
+    * relies on `usb_phy` block (~poor man's UTMI block) whichi can be
+      found on [opencores.org](https://opencores.org/projects/usb_phy).
+    * "modified BSD for Resume style license"
+
+* [usb2_dev](https://github.com/www-asics-ws/usb2_dev)
+
+    * USB 2.0 Device IP Core by [ASICSs World Services](www.asics.ws)
+    * UTMI interface
+    * [Core documentation](https://github.com/www-asics-ws/usb2_dev/blob/master/doc/usb_doc.pdf) is 
+       a very good USB introduction too.
+
+* [Nitro USB Core](https://github.com/no2fpga/no2usb/tree/master)
+    
+    * USB 1.1 device using FPGA IOs
+    * HW: CERN Open Hardware License v2
+    * FW: LGPL 3.0
+
 * [ULPI in OpenVizsla](https://github.com/openvizsla/ov_ftdi/blob/master/software/fpga/ov3/ovhw/ulpi.py)
 
 

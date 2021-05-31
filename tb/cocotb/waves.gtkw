@@ -1,0 +1,30 @@
+[*]
+[*] GTKWave Analyzer v3.3.90 (w)1999-2018 BSI
+[*] Mon May 31 05:41:03 2021
+[*]
+[dumpfile] "/home/tom/projects/usb_system/tb/cocotb/Top.vcd"
+[dumpfile_mtime] "Mon May 31 05:39:31 2021"
+[dumpfile_size] 4388377
+[savefile] "/home/tom/projects/usb_system/tb/cocotb/waves.gtkw"
+[timestart] 0
+[size] 1987 1015
+[pos] 935 313
+*-22.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] Top_wrapper.
+[treeopen] Top_wrapper.u_top.
+[treeopen] Top_wrapper.u_top.cpu_u_cpu.
+[treeopen] Top_wrapper.u_top.cpu_u_cpu.u_cpu.
+[treeopen] Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.
+[sst_width] 223
+[signals_width] 230
+[sst_expanded] 1
+[sst_vpaned_height] 298
+@28
+Top_wrapper.osc_clk_in
+Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_valid
+@22
+Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
+@8023
+Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

@@ -1,22 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.90 (w)1999-2018 BSI
-[*] Mon May 31 05:41:03 2021
+[*] Mon May 31 22:37:27 2021
 [*]
 [dumpfile] "/home/tom/projects/usb_system/tb/cocotb/Top.vcd"
-[dumpfile_mtime] "Mon May 31 05:39:31 2021"
-[dumpfile_size] 4388377
+[dumpfile_mtime] "Mon May 31 22:37:18 2021"
+[dumpfile_size] 4091115
 [savefile] "/home/tom/projects/usb_system/tb/cocotb/waves.gtkw"
-[timestart] 0
+[timestart] 5380900
 [size] 1987 1015
-[pos] 935 313
-*-22.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-15.000000 5444800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] Top_wrapper.
 [treeopen] Top_wrapper.u_top.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.u_cpu.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.
 [sst_width] 223
-[signals_width] 230
+[signals_width] 338
 [sst_expanded] 1
 [sst_vpaned_height] 298
 @28
@@ -24,7 +24,24 @@ Top_wrapper.osc_clk_in
 Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_valid
 @22
 Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
-@8023
+@8022
 Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
+@200
+-
+@28
+Top_wrapper.ulpi_clk
+Top_wrapper.ulpi_reset_
+Top_wrapper.ulpi_direction
+@29
+Top_wrapper.ulpi_stp
+@28
+Top_wrapper.ulpi_nxt
+@22
+Top_wrapper.ulpi_data2link[7:0]
+Top_wrapper.ulpi_data2phy[7:0]
+@28
+Top_wrapper.ulpi_data_ena
+@22
+Top_wrapper.ulpi_data_writeEnable[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

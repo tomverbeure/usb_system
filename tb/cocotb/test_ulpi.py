@@ -28,7 +28,10 @@ async def test_ulpi_simple(dut):
             nxt         = dut.ulpi_nxt
             )
 
-    ulpi_phy = ulpi.UlpiPhy(dut, clock = dut.ulpi_clk, signals = ulpi_signals)
+    ulpi_phy = ulpi.UlpiPhy(dut, clock = dut.ulpi_clk, signals = ulpi_signals, 
+            vendor_id  = 0x0451,
+            product_id = 0x1507,
+            )
 
     for i in range(1000):
 #        val = random.randint(0, 1)

@@ -151,6 +151,9 @@ int main()
     jtag_uart_tx_str("ULPI enable.\n");
     REG_WR_FIELD(UTMI2ULPI_CONFIG, ENABLE, 1);
 
+    get_vendor_id();
+    get_product_id();
+
     // Disable pulldown resistors.
     ulpi_reg_wr(ULPI_OTG_CONTROL_ADDR, 0x00);
 

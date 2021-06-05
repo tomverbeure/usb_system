@@ -61,6 +61,25 @@ class UsbWireEvent:
     def __init__(self):
         pass
 
+class SetWire(UsbWireEvent):
+
+    def __init__(self, ls):
+        self.ls         = ls
+
+    def encode_as_rx_line_state(self, speed):
+
+        rx = []
+        ls = self.ls
+    
+        rx.append(RxState(
+                    rx_started = 0,
+                    rx_active  = 0,
+                    rx_valid   = 0,
+                    rx_error   = 0,
+                    rx_data    = 0))
+
+        return (rx, ls)
+
 
 class Packet(UsbWireEvent):
 

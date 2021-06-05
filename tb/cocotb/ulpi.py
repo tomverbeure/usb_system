@@ -163,6 +163,9 @@ class UlpiPhy:
         self.drv_vbus_external              = (data >> 6) & 1
         self.use_external_vbus_indicator    = (data >> 7) & 1
 
+        fs_idle_event = usb.SetWire("j")
+        self.rx_wire_event_queue.put_nowait(fs_idle_event)
+
     def register_write(self, address, data):
 
         if address == RegisterAddr.OTG_CTRL:

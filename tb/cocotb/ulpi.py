@@ -1,4 +1,5 @@
 
+
 from collections import namedtuple
 from enum import IntEnum, Flag, auto
 
@@ -6,6 +7,10 @@ import logging
 
 import cocotb
 from cocotb.triggers import RisingEdge, Timer, First, Event
+from cocotb.queue import Queue
+
+import usb
+from usb_constants import *
 
 class RegisterAddr(IntEnum):
     VENDOR_ID_LO                    = 0x00
@@ -74,6 +79,24 @@ class UlpiPhy:
         self.clock      = clock
         self.signals    = signals
 
+        self.cur_ls             = '_'
+        self.cur_rx_active      = 0
+        self.cur_rx_valid       = 0
+        self.cur_rx_error       = 0
+        self.cur_rx_data        = 0
+        self.cur_rxcmd          = 0
+
+        self.prev_ls            = '_'
+        self.prev_rx_active     = 0
+        self.prev_rx_valid      = 0
+        self.prev_rx_error      = 0
+        self.prev_rxcmd         = 0
+
+        self.recalc_rxcmd()
+        self.rxcmd_stale        = True
+
+        self.rx_wire_event_queue    = Queue()
+
         if 'vendor_id' in kwargs.keys():
             self.vendor_id   = kwargs['vendor_id']
         else:
@@ -95,14 +118,19 @@ class UlpiPhy:
         if self.signals.data2link is not None:
             self.signals.data2link.setimmediatevalue(0)
 
-        self._run_cr = None
+        self._run_cr            = None
+#        self._rxcmd_update_cr   = None
         self._restart()
 
     def _restart(self):
 
-        if  self._run_cr is not None:
+        if self._run_cr is not None:
             self._run_cr.kill()
         self._run_cr = cocotb.fork(self._run())
+
+#        if self._rxcmd_update_cr is not None:
+#            self._rxcmd_update_cr.kill() 
+#        self._rxcmd_update_cr = cocotb.fork(self._rxcmd_update())
 
     async def _hw_register_write(self):
         #self.dut._log.info("Register write start...")
@@ -226,6 +254,177 @@ class UlpiPhy:
                 # USB transmit successful
                 return data
 
+    def calc_rxcmd(self, ls, sess_end, sess_valid, vbus_valid, rx_active, rx_valid, rx_error, host_disconnect):
+
+        # ULPI 1.1 Table 7
+        data = 0
+
+        if ls == '_':
+            data = data | LineState.SE0
+        elif ls == 'j':
+            data = data | LineState.J
+        elif ls == 'k':
+            data = data | LineState.K
+        elif ls == '+':
+            data = data | LineState.SE1
+
+        if vbus_valid:
+            data = data | (0b11 << 2)
+        elif sess_valid: 
+            data = data | (0b10 << 2)
+        elif sess_end: 
+            data = data | (0b00 << 2)
+        else:
+            data = data | (0b01 << 2)
+
+
+        if host_disconnect:
+            data = data | (0b11 << 4)
+        elif rx_active and rx_error:
+            data = data | (0b10 << 4)
+        elif rx_active:
+            data = data | (0b01 << 4)
+        else:
+            data = data | (0b00 << 4)
+
+        return data
+
+    def recalc_rxcmd(self):
+        self.cur_rxcmd = self.calc_rxcmd(
+                    ls              = self.cur_ls,
+                    sess_end        = 0, 
+                    sess_valid      = 1, 
+                    vbus_valid      = 1, 
+                    rx_active       = self.cur_rx_active, 
+                    rx_valid        = self.cur_rx_valid, 
+                    rx_error        = self.cur_rx_error, 
+                    host_disconnect = 0)
+
+        if self.cur_rxcmd != self.prev_rxcmd:
+            self.rxcmd_stale    = True
+
+        self.prev_rx_active     = self.cur_rx_active
+        self.prev_rx_valid      = self.cur_rx_valid
+        self.prev_rx_error      = self.cur_rx_error
+        self.prev_ls            = self.cur_ls
+
+        self.prev_rxcmd         = self.cur_rxcmd
+
+    async def _hw_rxcmd(self):
+
+        # Just a turn-around cycle to signal changed line state
+        self.signals.direction          <= 1
+        self.signals.nxt                <= 0
+        self.signals.data2link          <= 0
+
+        await RisingEdge(self.clock)
+
+        self.signals.data2link          <= self.cur_rxcmd
+        self.rxcmd_stale = False
+
+        await RisingEdge(self.clock)
+
+        self.signals.direction          <= 0
+        self.signals.nxt                <= 0
+        self.signals.data2link          <= 0
+
+        await RisingEdge(self.clock)
+
+    async def _hw_receive(self):
+        we = await self.rx_wire_event_queue.get()
+
+        # FIXME: hardcoded to FS right now...
+        clocks_per_symbol = 5
+        (rx, ls) = we.encode_as_rx_line_state(UsbSpeed.FS)
+        self.dut.log.info("Receive: ", ls)
+
+        await RisingEdge(self.clock)
+
+        # FIXME: the code below assumes that the link won't start
+        # transmitting when the phy is toggling line states but hasn't
+        # asserted RxActive yet!!!
+        # That's fine for well behaving host and device only!
+
+        for i in range(len(rx)):
+            clocks_remaining = clocks_per_symbol
+
+            cur_ls  = ls[i]
+            cur_rx  = rx[i]
+
+            self.cur_ls         = cur_ls
+            self.cur_rx_active  = cur_rx.rx_active
+            self.cur_rx_valid   = cur_rx.rx_valid
+            self.cur_rx_error   = cur_rx.rx_error
+            self.cur_rx_data    = cur_rx.rx_data
+
+            self.dut._log.info("RX: %s, LS: %s" % (cur_rx, cur_ls))
+
+            rx_active_unchanged = self.prev_rx_active == self.cur_rx_active
+            rx_active_rising    = not(self.prev_rx_active) and     self.cur_rx_active
+            rx_active_falling   =     self.prev_rx_active  and not(self.cur_rx_active)
+
+            self.recalc_rxcmd()
+
+            if not(self.cur_rx_active) and rx_active_unchanged:
+
+                if self.rxcmd_stale:
+                    await self._hw_rxcmd()
+                    clocks_remaining = clocks_remaining - 1
+
+                for _ in range(clocks_remaining):
+                    await RisingEdge(self.clock)
+
+            else:
+
+                if rx_active_rising:
+
+                    self.dut.log.info("0")
+                    # Turn-around cycle to start RX
+                    self.signals.direction          <= 1
+                    self.signals.nxt                <= 1
+                    self.signals.data2link          <= 0
+    
+                    await RisingEdge(self.clock)
+                    clocks_remaining = clocks_remaining - 1
+
+                elif rx_active_falling:
+
+                    self.dut.log.info("1")
+                    # Turn-around cycle to finish RX
+                    self.signals.direction          <= 0
+                    self.signals.nxt                <= 0
+                    self.signals.data2link          <= 0
+    
+                    await RisingEdge(self.clock)
+                    clocks_remaining = clocks_remaining - 1
+
+                if self.cur_rx_valid:
+                    self.dut.log.info("2")
+                    self.signals.nxt                <= 1
+                    self.signals.data2link          <= self.cur_rx_data
+
+                    await RisingEdge(self.clock)
+                    clocks_remaining = clocks_remaining - 1
+
+                    self.cur_rx_valid = 0
+                    self.recalc_rxcmd()
+
+                for _ in range(clocks_remaining):
+                    self.dut.log.info("3")
+
+                    self.signals.nxt                <= 0
+
+                    if self.signals.direction.value == 1:
+                        self.signals.data2link          <= self.cur_rxcmd
+                        self.rxcmd_stale = False
+                    else:
+                        if self.rxcmd_stale:
+                            await self._hw_rxcmd()
+
+                    await RisingEdge(self.clock)
+
+        pass
+
 
     async def _run(self):
 
@@ -245,30 +444,71 @@ class UlpiPhy:
 
             await RisingEdge(self.clock)
 
-            if self.signals.data2phy.value == 0:
+            #============================================================
+            # RECEIVE
+            #============================================================
+            if not(self.rx_wire_event_queue.empty()):
+                self.dut._log.info("Packet received...")
+                await self._hw_receive()
                 continue
 
-            action = self.signals.data2phy.value >> 6
+            #============================================================
+            # TXCMD
+            #============================================================
+            if self.signals.data2phy.value != 0:
 
-            if action == 0x0:
+                action = self.signals.data2phy.value >> 6
+    
+                if action == 0x0:
+                    continue
+                elif action == 0x01:
+                    # Transmit: link to phy
+                    await self._hw_transmit()
+    
+                elif action == 0x2:
+                    # Register write
+                    (address, data) = await self._hw_register_write()
+                    self.dut._log.info("Register write: 0x%02x = 0x%02x" % (address, data))
+                elif action == 0x3:
+                    # Register read
+                    (address, data) = await self._hw_register_read()
+                    self.dut._log.info("Register read: 0x%02x = 0x%02x" % (address, data))
+
                 continue
-            elif action == 0x01:
-                # Transmit: link to phy
-                await self._hw_transmit()
 
-            elif action == 0x2:
-                # Register write
-                (address, data) = await self._hw_register_write()
-                self.dut._log.info("Register write: 0x%02x = 0x%02x" % (address, data))
-            elif action == 0x3:
-                # Register read
-                (address, data) = await self._hw_register_read()
-                self.dut._log.info("Register read: 0x%02x = 0x%02x" % (address, data))
+            #============================================================
+            # RXCMD
+            #============================================================
+            if self.rxcmd_stale: 
+                await self._hw_rxcmd()
 
         pass
 
+#    async def _rxcmd_update(self):
+#
+#        while True:
+#            await RisingEdge(self.clock)
+#
+#            rxcmd = self.calc_rxcmd(
+#                        ls              = self.cur_ls
+#                        sess_end        = 0, 
+#                        sess_valid      = 1, 
+#                        vbus_valid      = 1, 
+#                        rx_active       = self.cur_rx_active, 
+#                        rx_valid        = self.cur_valid, 
+#                        rx_error        = self.cur_rx_error, 
+#                        host_disconnect = 0)
+#
+#            if rxcmd != self.cur_rxcmd:
+#                self.cur_rxcmd          = rxcmd
+#                self.rxcmd_stale        = True
+#
+#        pass
 
-    def receive(self, data):
+    def receive(self, wire_event):
         # Schedule bytes to be sent to the link
+        self.rx_wire_event_queue.put_nowait(wire_event)
         pass
+
+
 

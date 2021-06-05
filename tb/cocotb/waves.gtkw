@@ -1,24 +1,24 @@
 [*]
-[*] GTKWave Analyzer v3.3.90 (w)1999-2018 BSI
-[*] Mon May 31 22:37:27 2021
+[*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
+[*] Sat Jun  5 16:21:10 2021
 [*]
-[dumpfile] "/home/tom/projects/usb_system/tb/cocotb/Top.vcd"
-[dumpfile_mtime] "Mon May 31 22:37:18 2021"
-[dumpfile_size] 4091115
-[savefile] "/home/tom/projects/usb_system/tb/cocotb/waves.gtkw"
-[timestart] 5380900
-[size] 1987 1015
+[dumpfile] "/Users/tom/projects/usb_system/tb/cocotb/Top.vcd"
+[dumpfile_mtime] "Sat Jun  5 16:03:44 2021"
+[dumpfile_size] 1021993
+[savefile] "/Users/tom/projects/usb_system/tb/cocotb/waves.gtkw"
+[timestart] 715000
+[size] 1920 1015
 [pos] -1 -1
-*-15.000000 5444800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-19.000000 2599000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] Top_wrapper.
 [treeopen] Top_wrapper.u_top.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.u_cpu.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.
-[sst_width] 223
+[sst_width] 285
 [signals_width] 338
 [sst_expanded] 1
-[sst_vpaned_height] 298
+[sst_vpaned_height] 453
 @28
 Top_wrapper.osc_clk_in
 Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_valid
@@ -32,9 +32,7 @@ Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_payload_pc[31:0]
 Top_wrapper.ulpi_clk
 Top_wrapper.ulpi_reset_
 Top_wrapper.ulpi_direction
-@29
 Top_wrapper.ulpi_stp
-@28
 Top_wrapper.ulpi_nxt
 @22
 Top_wrapper.ulpi_data2link[7:0]
@@ -43,5 +41,12 @@ Top_wrapper.ulpi_data2phy[7:0]
 Top_wrapper.ulpi_data_ena
 @22
 Top_wrapper.ulpi_data_writeEnable[7:0]
+@201
+-
+@28
+Top_wrapper.u_top.usb_u_utmi2ulpi.io_utmi_rx_active
+Top_wrapper.u_top.usb_u_utmi2ulpi.io_utmi_rx_error
+Top_wrapper.u_top.usb_u_utmi2ulpi.io_utmi_rx_valid
+Top_wrapper.u_top.usb_u_utmi2ulpi.io_utmi_line_state[1:0]
 [pattern_trace] 1
 [pattern_trace] 0

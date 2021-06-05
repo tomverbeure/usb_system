@@ -6,6 +6,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge
 
 import ulpi
+import usb
 
 @cocotb.test()
 async def test_ulpi_simple(dut):
@@ -34,7 +35,12 @@ async def test_ulpi_simple(dut):
             )
 
     for i in range(1000):
-#        val = random.randint(0, 1)
-#        dut.d <= val  # Assign the random value val to the input port d
         await FallingEdge(dut.osc_clk_in)
-#        assert dut.q.value == val, "output q was incorrect on the {}th cycle".format(i)
+
+
+    sof = usb.SofPacket(100)
+    ulpi_phy.receive(sof)
+    
+    for i in range(500):
+        await FallingEdge(dut.osc_clk_in)
+

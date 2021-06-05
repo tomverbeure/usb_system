@@ -1,5 +1,8 @@
 #! /usr/bin/env python3
 
+from collections import namedtuple
+from enum import Enum
+
 import usb_crc
 from pid import *
 from usb_constants import *
@@ -44,6 +47,15 @@ from usb_constants import *
 
 # Copied from ValentyUSB
 
+
+# rx_started: 1 when sync word has been started.
+# rx_active:  1 as soon as the sync word has been detected.
+# rx_valid:   1 when a full byte has been detected and is ready to be sent to the link
+# rx_error:   1 when an error has been detected
+# rx_data:    value associated with rx_valid
+
+RxState = namedtuple("RxState", [ 'rx_started', 'rx_active', 'rx_valid', 'rx_error', 'rx_data' ] )
+
 class UsbWireEvent:
 
     def __init__(self):
@@ -74,24 +86,57 @@ class Packet(UsbWireEvent):
 
             sync =  "kjkjkjkk" 
             for x in range(len(sync)):
-                rx.append((False, False, 0))
+                rx.append(RxState(
+                            rx_started = 1,
+                            rx_active  = 0,
+                            rx_valid   = 0,
+                            rx_error   = 0,
+                            rx_data    = 0))
             ls += sync
 
             last_byte = 0
             for b in self.raw_bytes():
-                ls += "jjkjjkjk"        # LS doesn't matter after SYNC
+                ls += "jjkjjkjk"        # line state doesn't matter after SYNC. Just some random value...
                 for x in range(7):
-                    rx.append((True, False, last_byte))
-                rx.append((True, True, b))
+                    rx.append(RxState(
+                                rx_started = 1,
+                                rx_active  = 1,
+                                rx_valid   = 0,
+                                rx_error   = 0,
+                                rx_data    = last_byte))
+
+                rx.append(RxState(
+                            rx_started = 1,
+                            rx_active  = 1,
+                            rx_valid   = 1,
+                            rx_error   = 0,
+                            rx_data    = b))
+
                 last_bytes = b
 
             ls += "__j"
-            rx.append((True, False, last_byte))
-            rx.append((True, False, last_byte))
+            rx.append(RxState(
+                        rx_started = 1,
+                        rx_active  = 1,
+                        rx_valid   = 0,
+                        rx_error   = 0,
+                        rx_data    = last_byte))
+            rx.append(RxState(
+                        rx_started = 1,
+                        rx_active  = 1,
+                        rx_valid   = 0,
+                        rx_error   = 0,
+                        rx_data    = last_byte))
+
             # FIXME:
             # Immediate after EOP or half into J ?
             # Right now, it's immediate after EOP...
-            rx.append((False, False, last_byte))
+            rx.append(RxState(
+                        rx_started = 0,
+                        rx_active  = 0,
+                        rx_valid   = 0,
+                        rx_error   = 0,
+                        rx_data    = last_byte))
 
         elif speed == UsbSpeed.HS:
             # For HS, each symbol is 1/8th clock cycle
@@ -105,22 +150,58 @@ class Packet(UsbWireEvent):
             # For now, always use 32 symbols
             sync = "jjjj"
             ls += sync
-            rx.append((False, False, 0))
-            rx.append((False, False, 0))
-            rx.append((False, False, 0))
-            rx.append((True,  False, 0))
+
+            rx.append(RxState(
+                        rx_started = 1,
+                        rx_active  = 0,
+                        rx_valid   = 0,
+                        rx_error   = 0,
+                        rx_data    = 0))
+            rx.append(RxState(
+                        rx_started = 1,
+                        rx_active  = 0,
+                        rx_valid   = 0,
+                        rx_error   = 0,
+                        rx_data    = 0))
+            rx.append(RxState(
+                        rx_started = 1,
+                        rx_active  = 0,
+                        rx_valid   = 0,
+                        rx_error   = 0,
+                        rx_data    = 0))
+            rx.append(RxState(
+                        rx_started = 1,
+                        rx_active  = 1,
+                        rx_valid   = 0,
+                        rx_error   = 0,
+                        rx_data    = 0))
 
             # Right now, we're not doing any real bitstuffing, so
             # fake it by inserting a dummy cycle every once in a while.
             for nr, b in enumerate(self.raw_bytes()):
                 ls += "j"
-                rx.append((True, True, b))
+                rx.append(RxState(
+                            rx_started = 1,
+                            rx_active  = 1,
+                            rx_valid   = 1,
+                            rx_error   = 0,
+                            rx_data    = b))
                 if nr % 6 == 3:
                     ls += "j"
-                    rx.append((True, False, b))
+                    rx.append(RxState(
+                                rx_started = 1,
+                                rx_active  = 1,
+                                rx_valid   = 0,
+                                rx_error   = 0,
+                                rx_data    = b))
 
             ls += "_"
-            rx.append((False, False, 0))
+            rx.append(RxState(
+                        rx_started = 0,
+                        rx_active  = 0,
+                        rx_valid   = 0,
+                        rx_error   = 0,
+                        rx_data    = 0))
 
         return (rx, ls)
 

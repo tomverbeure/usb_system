@@ -7,7 +7,7 @@ class UsbSpeed(Enum):
     HS      = 2
 
 
-class LineState(Enum):
+class LineState(IntEnum):
     SE0     = 0
     J       = 1
     K       = 2

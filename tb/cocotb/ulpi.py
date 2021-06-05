@@ -107,6 +107,15 @@ class UlpiPhy:
         else:
             self.product_id   = 0xcafe;
 
+        self.id_pullup                    = 0
+        self.dp_pulldown                  = 1
+        self.dm_pulldown                  = 1
+        self.dischrg_vbus                 = 0
+        self.chrg_vbus                    = 0
+        self.drv_vbus                     = 0
+        self.drv_vbus_external            = 0
+        self.use_external_vbus_indicator  = 0
+
         super().__init__()
 
         if self.signals.direction is not None:
@@ -132,8 +141,57 @@ class UlpiPhy:
 #            self._rxcmd_update_cr.kill() 
 #        self._rxcmd_update_cr = cocotb.fork(self._rxcmd_update())
 
+    def otg_ctrl_read(self):
+
+       return   (self.id_pullup                     << 0) | \
+                (self.dp_pulldown                   << 1) | \
+                (self.dm_pulldown                   << 2) | \
+                (self.dischrg_vbus                  << 3) | \
+                (self.chrg_vbus                     << 4) | \
+                (self.drv_vbus                      << 5) | \
+                (self.drv_vbus_external             << 6) | \
+                (self.use_external_vbus_indicator   << 7)
+
+    def otg_ctrl_write(self, data):
+
+        self.id_pullup                      = (data >> 0) & 1
+        self.dp_pulldown                    = (data >> 1) & 1
+        self.dm_pulldown                    = (data >> 2) & 1
+        self.dischrg_vbus                   = (data >> 3) & 1
+        self.chrg_vbus                      = (data >> 4) & 1
+        self.drv_vbus                       = (data >> 5) & 1
+        self.drv_vbus_external              = (data >> 6) & 1
+        self.use_external_vbus_indicator    = (data >> 7) & 1
+
+    def register_write(self, address, data):
+
+        if address == RegisterAddr.OTG_CTRL:
+            self.otg_ctrl_write(data)
+            return
+
+    def register_read(self, address):
+
+        if address == RegisterAddr.VENDOR_ID_LO:
+            return self.vendor_id & 0xff
+
+        if address == RegisterAddr.VENDOR_ID_HI:
+            return (self.vendor_id >> 8) & 0xff
+
+        if address == RegisterAddr.PRODUCT_ID_LO:
+            return self.product_id & 0xff
+
+        if address == RegisterAddr.PRODUCT_ID_HI:
+            return (self.product_id >> 8) & 0xff
+
+        if     address == RegisterAddr.OTG_CTRL      \
+            or address == RegisterAddr.OTG_CTRL_CLR  \
+            or address == RegisterAddr.OTG_CTRL_SET:
+
+            return self.otg_ctrl_read()
+
+        return 0x00
+
     async def _hw_register_write(self):
-        #self.dut._log.info("Register write start...")
         address = self.signals.data2phy.value & ((1<<6)-1)
 
         self.signals.nxt    <= 1
@@ -156,24 +214,8 @@ class UlpiPhy:
 
         return (address, data)
 
-    def register_read(self, address):
-
-        if address == RegisterAddr.VENDOR_ID_LO:
-            return self.vendor_id & 0xff
-        elif address == RegisterAddr.VENDOR_ID_HI:
-            return (self.vendor_id >> 8) & 0xff
-        if address == RegisterAddr.PRODUCT_ID_LO:
-            return self.product_id & 0xff
-        elif address == RegisterAddr.PRODUCT_ID_HI:
-            return (self.product_id >> 8) & 0xff
-
-        else:
-            return 0x00
-
-        return 
-
     async def _hw_register_read(self):
-        #self.dut._log.info("Register read start...")
+
         address = self.signals.data2phy.value & ((1<<6)-1)
 
         self.signals.nxt    <= 1
@@ -186,20 +228,22 @@ class UlpiPhy:
 
         self.signals.nxt            <= 0
         self.signals.direction      <= 1
+        self.signals.data2link      <= 0
         await RisingEdge(self.clock)
-
         # Turn around
 
-        await RisingEdge(self.clock)
-
-        self.signals.data2link  <= 0x5a
-
-        await RisingEdge(self.clock)
-
         self.signals.direction      <= 1
-
         data = self.register_read(address)
         self.signals.data2link      <= data
+
+        await RisingEdge(self.clock)
+        # Drive read data
+
+        self.signals.direction      <= 0
+        self.signals.data2link      <= 0
+        await RisingEdge(self.clock)
+
+        #Turn around
 
         return (address, data)
 
@@ -336,7 +380,6 @@ class UlpiPhy:
         # FIXME: hardcoded to FS right now...
         clocks_per_symbol = 5
         (rx, ls) = we.encode_as_rx_line_state(UsbSpeed.FS)
-        self.dut.log.info("Receive: ", ls)
 
         await RisingEdge(self.clock)
 
@@ -378,7 +421,6 @@ class UlpiPhy:
 
                 if rx_active_rising:
 
-                    self.dut.log.info("0")
                     # Turn-around cycle to start RX
                     self.signals.direction          <= 1
                     self.signals.nxt                <= 1
@@ -389,7 +431,6 @@ class UlpiPhy:
 
                 elif rx_active_falling:
 
-                    self.dut.log.info("1")
                     # Turn-around cycle to finish RX
                     self.signals.direction          <= 0
                     self.signals.nxt                <= 0
@@ -399,7 +440,6 @@ class UlpiPhy:
                     clocks_remaining = clocks_remaining - 1
 
                 if self.cur_rx_valid:
-                    self.dut.log.info("2")
                     self.signals.nxt                <= 1
                     self.signals.data2link          <= self.cur_rx_data
 
@@ -410,7 +450,6 @@ class UlpiPhy:
                     self.recalc_rxcmd()
 
                 for _ in range(clocks_remaining):
-                    self.dut.log.info("3")
 
                     self.signals.nxt                <= 0
 
@@ -468,11 +507,13 @@ class UlpiPhy:
                 elif action == 0x2:
                     # Register write
                     (address, data) = await self._hw_register_write()
+                    self.register_write(address, data)
+
                     self.dut._log.info("Register write: 0x%02x = 0x%02x" % (address, data))
                 elif action == 0x3:
                     # Register read
                     (address, data) = await self._hw_register_read()
-                    self.dut._log.info("Register read: 0x%02x = 0x%02x" % (address, data))
+                    self.dut._log.info("Register read:  0x%02x = 0x%02x" % (address, data))
 
                 continue
 

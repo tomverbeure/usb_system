@@ -34,7 +34,7 @@ async def test_ulpi_simple(dut):
             product_id = 0x1507,
             )
 
-    for i in range(1000):
+    for i in range(2000):
         await FallingEdge(dut.osc_clk_in)
 
 

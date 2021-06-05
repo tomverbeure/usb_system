@@ -9,9 +9,6 @@ import spinal.lib.bus.misc._
 import spinal.lib.bus.amba3.apb._
 
 object UsbDevice {
-    // 8 bits -> 64 registers
-    // We need 32 registers for MAX3421E compatibility. The other registers are for
-    // additional status and debug.
     def getApb3Config() = Apb3Config(addressWidth = 13, dataWidth=32)
 
     object PidType extends SpinalEnum {
@@ -48,6 +45,7 @@ object UsbDevice {
 
     // Time to go from FS normal mode to suspend
     val t_fs_suspend        = 3 ms
+    val t_fs_suspend_sim    = 10 us
 
     // Time to wait after start of SE0 to start HS detection handshake
     val t_wtrstfs           = 1.5 ms
@@ -87,7 +85,7 @@ object UsbDevice {
 
 }
 
-case class UsbDevice() extends Component {
+case class UsbDevice(isSim : Boolean = false) extends Component {
 
     import UsbDevice._
     import Utmi._
@@ -160,6 +158,10 @@ case class UsbDevice() extends Component {
     address_assigned            := False
     device_configured           := False
     device_deconfigured         := False
+
+    val clock_speed       = 60 MHz
+
+    val cyc_fs_suspend  = ((if (isSim) t_fs_suspend_sim  else t_fs_suspend) * clock_speed).toInt
 
     val device_fsm = new Area {
 
@@ -286,7 +288,6 @@ case class UsbDevice() extends Component {
     val line_state_prev     = RegNext(io.utmi.line_state) init(Utmi.LineState.SE0)
     val line_state_changed  = io.utmi.line_state =/= line_state_prev
 
-    val clock_speed       = 60 MHz
 
     val reset_fsm = new Area {
         // USB 2.0: Appendix C.2: Upstream Facing Port State Diagram
@@ -356,7 +357,7 @@ case class UsbDevice() extends Component {
                 when(line_state_changed){
                     reset_state             := ResetState.Idle
                 }
-                .elsewhen(fs_idle_detected && t0_cntr >= (t_fs_suspend * clock_speed).toInt){
+                .elsewhen(fs_idle_detected && t0_cntr >= cyc_fs_suspend){
                     go_to_suspended         := True
                     reset_state             := ResetState.Idle
                 }

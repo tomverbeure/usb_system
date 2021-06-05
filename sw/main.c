@@ -154,8 +154,11 @@ int main()
     get_vendor_id();
     get_product_id();
 
+    ulpi_reg_rd(ULPI_OTG_CONTROL_ADDR);
+
     // Disable pulldown resistors.
     ulpi_reg_wr(ULPI_OTG_CONTROL_ADDR, 0x00);
+    ulpi_reg_rd(ULPI_OTG_CONTROL_ADDR);
 
     REG_WR_FIELD(UTMI2ULPI_CONFIG, FUNC_RESET, 1);
     REG_WR_FIELD(UTMI2ULPI_CONFIG, FUNC_RESET, 0);

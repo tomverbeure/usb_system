@@ -206,7 +206,7 @@ class Top(isSim: Boolean) extends Component
         u_utmi2ulpi.io.utmi           <> utmi
         u_utmi2ulpi.io.pll_locked     <> ulpi_pll_locked
 
-        val u_usb_device = new UsbDevice()
+        val u_usb_device = new UsbDevice(isSim)
         u_usb_device.io.utmi          <> utmi
 
         val usb_dev_apb = new ClockingArea(clkCpuDomain){

@@ -38,7 +38,7 @@ async def test_ulpi_simple(dut):
         await FallingEdge(dut.osc_clk_in)
 
 
-    sof = usb.SofPacket(102)
+    sof = usb.SofPacket(0x219)
     ulpi_phy.receive(sof)
     
     for i in range(500):

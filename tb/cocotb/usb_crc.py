@@ -40,7 +40,7 @@ def crc5_sof(v):
     """
     reg = crc.CrcRegister(crc.CRC5_USB)
     reg.takeWord(v, 11)
-    return eval('0b' + bin(reg.getFinalValue() | 0x10000000)[::-1][:5])
+    return reg.getFinalValue()
 
 def crc16(input_data):
     # width=16 poly=0x8005 init=0xffff refin=true refout=true xorout=0xffff check=0xb4c8 residue=0xb001 name="CRC-16/USB"

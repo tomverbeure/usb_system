@@ -91,34 +91,6 @@ object UsbDevice {
     // is no downstream chirp is detected
     val t_wtfs              = 2.5 ms
     val t_wtfs_sim          = 25 us
-
-    def crc5(data_in: Bits): Bits = {
-        //-----------------------------------------------------------------------------
-        //// Copyright (C) 2009 OutputLogic.com
-        //// This source file may be used and distributed without restriction
-        //// provided that this copyright statement is not removed from the file
-        //// and that any derivative work contains the original copyright notice
-        //// and the associated disclaimer.
-        ////
-        //// THIS SOURCE FILE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS
-        //// OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
-        //// WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-        ////-----------------------------------------------------------------------------
-        //// CRC module for data[10:0] ,   crc[4:0]=1+x^2+x^5;
-        ////-----------------------------------------------------------------------------
-
-        val lfsr_q = Bits(5 bits).setAll      // Full CRC5 is calculated in 1 step, so init value is constant.
-        val lfsr_c = Bits(5 bits)
-
-        lfsr_c(0) := lfsr_q(0) ^ lfsr_q(3) ^ lfsr_q(4) ^ data_in(0) ^ data_in(3) ^ data_in(5) ^ data_in(6) ^ data_in(9) ^ data_in(10)
-        lfsr_c(1) := lfsr_q(0) ^ lfsr_q(1) ^ lfsr_q(4) ^ data_in(1) ^ data_in(4) ^ data_in(6) ^ data_in(7) ^ data_in(10)
-        lfsr_c(2) := lfsr_q(0) ^ lfsr_q(1) ^ lfsr_q(2) ^ lfsr_q(3) ^ lfsr_q(4) ^ data_in(0) ^ data_in(2) ^ data_in(3) ^ data_in(6) ^ data_in(7) ^ data_in(8) ^ data_in(9) ^ data_in(10)
-        lfsr_c(3) := lfsr_q(1) ^ lfsr_q(2) ^ lfsr_q(3) ^ lfsr_q(4) ^ data_in(1) ^ data_in(3) ^ data_in(4) ^ data_in(7) ^ data_in(8) ^ data_in(9) ^ data_in(10)
-        lfsr_c(4) := lfsr_q(2) ^ lfsr_q(3) ^ lfsr_q(4) ^ data_in(2) ^ data_in(4) ^ data_in(5) ^ data_in(8) ^ data_in(9) ^ data_in(10)
-
-        lfsr_c
-    }
-
 }
 
 case class UsbDevice(isSim : Boolean = false) extends Component {
@@ -636,7 +608,7 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
         io.rx_valid   := False
         io.rx_data    := 0
 
-        val sof_crc5_calc = UsbDevice.crc5(cur_frame_nr.asBits)
+        val sof_crc5_calc = u_crc5.io.result
         val sof_crc5_match = sof_crc5_calc === cur_crc5
 
         switch(rx_state){

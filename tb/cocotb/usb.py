@@ -324,6 +324,6 @@ if __name__ == "__main__":
     print(hp.raw_bytes())
     print(hp.encode_as_rx_line_state(UsbSpeed.FS)[1])
 
-    sp = SofPacket(100)
+    sp = SofPacket(102)
     print(sp.raw_bytes())
     print(sp.encode_as_rx_line_state(UsbSpeed.FS)[1])

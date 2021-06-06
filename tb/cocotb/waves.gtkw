@@ -1,20 +1,21 @@
 [*]
 [*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
-[*] Sat Jun  5 22:41:08 2021
+[*] Sun Jun  6 03:21:09 2021
 [*]
 [dumpfile] "/Users/tom/projects/usb_system/tb/cocotb/Top.vcd"
-[dumpfile_mtime] "Sat Jun  5 22:41:00 2021"
-[dumpfile_size] 11592900
+[dumpfile_mtime] "Sun Jun  6 01:29:51 2021"
+[dumpfile_size] 16450779
 [savefile] "/Users/tom/projects/usb_system/tb/cocotb/waves.gtkw"
-[timestart] 0
+[timestart] 62756200
 [size] 1920 1015
 [pos] -1 -1
-*-25.000000 28303000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-15.000000 62837300 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] Top_wrapper.
 [treeopen] Top_wrapper.u_top.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.u_cpu.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.
+[treeopen] Top_wrapper.u_top.usb_u_usb_device.
 [treeopen] Top_wrapper.u_top.usb_u_utmi2ulpi.
 [sst_width] 285
 [signals_width] 683
@@ -408,12 +409,11 @@ Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
 -group_end
 @820
 Top_wrapper.u_top.usb_u_usb_device.transaction_fsm_trans_state_string[143:0]
-Top_wrapper.u_top.usb_u_usb_device.rx_fsm_rx_state_string[55:0]
 @200
 -
-@c00821
+@c00820
 Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
-@29
+@28
 (0)Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
 (1)Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
 (2)Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
@@ -566,14 +566,22 @@ Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
 (149)Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
 (150)Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
 (151)Top_wrapper.u_top.usb_u_usb_device.reset_fsm_reset_state_string[151:0]
-@1401201
+@1401200
 -group_end
 @200
 -
 @28
-Top_wrapper.u_top.usb_u_usb_device.device_fsm_fs_normal_state
-Top_wrapper.u_top.usb_u_usb_device.device_fsm_hs_normal_state
+Top_wrapper.u_top.usb_u_usb_device.go_to_default
+Top_wrapper.u_top.usb_u_usb_device.go_to_suspended
+Top_wrapper.u_top.usb_u_usb_device.line_state_changed
+@24
+Top_wrapper.u_top.usb_u_usb_device.reset_fsm_t0_cntr[23:0]
+@200
+-
+@28
 Top_wrapper.u_top.usb_u_usb_device.device_fsm_normal_state
+Top_wrapper.u_top.usb_u_usb_device.device_fsm_hs_normal_state
+Top_wrapper.u_top.usb_u_usb_device.device_fsm_fs_normal_state
 @200
 -
 @28
@@ -583,5 +591,30 @@ Top_wrapper.u_top.usb_u_usb_device.fs_idle_detected
 Top_wrapper.u_top.usb_u_usb_device.hs_idle_detected
 Top_wrapper.u_top.usb_u_usb_device.k_detected
 Top_wrapper.u_top.usb_u_usb_device.se0_detected
+@200
+-
+@820
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_rx_state_string[151:0]
+@22
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_sof_crc5_err_cnt[7:0]
+@28
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_sof_crc5_match
+@24
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_cur_frame_nr[10:0]
+@22
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_sof_frame_nr[10:0]
+@200
+-
+@22
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_cur_crc5[4:0]
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_sof_crc5_calc[4:0]
+@200
+-
+@28
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_u_crc5.io_input_valid
+@24
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_u_crc5.io_input_payload[10:0]
+@22
+Top_wrapper.u_top.usb_u_usb_device.rx_fsm_u_crc5.io_result[4:0]
 [pattern_trace] 1
 [pattern_trace] 0

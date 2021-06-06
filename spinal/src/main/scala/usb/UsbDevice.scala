@@ -7,6 +7,7 @@ import spinal.lib.io._
 import spinal.lib.bus.simple._
 import spinal.lib.bus.misc._
 import spinal.lib.bus.amba3.apb._
+import spinal.lib.com.eth.{Crc, CrcKind}
 
 object UsbDevice {
     def getApb3Config() = Apb3Config(addressWidth = 13, dataWidth=32)
@@ -45,16 +46,19 @@ object UsbDevice {
 
     // Time to go from FS normal mode to suspend
     val t_fs_suspend        = 3 ms
-    val t_fs_suspend_sim    = 10 us
+    val t_fs_suspend_sim    = 30 us
 
     // Time to wait after start of SE0 to start HS detection handshake
     val t_wtrstfs           = 1.5 ms
+    val t_wtrstfs_sim       = 15 us
 
     // Time to wait after start of SE0 to revertfrom HS to FS
     val t_wtrev             = 1.5 ms
+    val t_wtrev_sim         = 15 us
 
     // Time to wait after reverting from HS to FS before sampling the bus to check for SE0
     val t_wtrsths           = 400 us
+    val t_wtrsths_sim       = 4 us
 
     // Time for a device to come out of suspend mode and get all its internal clocks running
     // Implementation dependent and not a fixed value defined in the spec.
@@ -62,26 +66,58 @@ object UsbDevice {
     // See USB C.2.1.
     // FIXME: instead of being hard-coded, can we get this from the UTMI block?
     val t_wtclk             = 2 ms
+    val t_wtclk_sim         = 20 us
 
     // Minimum Chirp K from a HS capable device within reset protocol
     val t_uch               = 1 ms
+    val t_uch_sim           = 10 us
 
     // Time after start of SE0 by which a HS device is required to have completed its Chirp K
     // within the reset protocol
     val t_uchend            = 7 ms
+    val t_uchend_sim        = 70 us
 
     // Time for which as suspended HS device must see SE0 before beginning a HS detection
     // handshake
     val t_filtse0           = 2.5 us
+    val t_filtse0_sim       = 2.5 us
 
     // Time for which a Chirp J or Chirp K must be continuously detected by device during
     // reset handshake
     val t_filt              = 2.5 us
+    val t_filt_sim          = 2.5 us
 
     // Time after end of upstream chirp at which device reverts to FS default state
     // is no downstream chirp is detected
     val t_wtfs              = 2.5 ms
+    val t_wtfs_sim          = 25 us
 
+    def crc5(data_in: Bits): Bits = {
+        //-----------------------------------------------------------------------------
+        //// Copyright (C) 2009 OutputLogic.com
+        //// This source file may be used and distributed without restriction
+        //// provided that this copyright statement is not removed from the file
+        //// and that any derivative work contains the original copyright notice
+        //// and the associated disclaimer.
+        ////
+        //// THIS SOURCE FILE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS
+        //// OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+        //// WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+        ////-----------------------------------------------------------------------------
+        //// CRC module for data[10:0] ,   crc[4:0]=1+x^2+x^5;
+        ////-----------------------------------------------------------------------------
+
+        val lfsr_q = Bits(5 bits).setAll      // Full CRC5 is calculated in 1 step, so init value is constant.
+        val lfsr_c = Bits(5 bits)
+
+        lfsr_c(0) := lfsr_q(0) ^ lfsr_q(3) ^ lfsr_q(4) ^ data_in(0) ^ data_in(3) ^ data_in(5) ^ data_in(6) ^ data_in(9) ^ data_in(10)
+        lfsr_c(1) := lfsr_q(0) ^ lfsr_q(1) ^ lfsr_q(4) ^ data_in(1) ^ data_in(4) ^ data_in(6) ^ data_in(7) ^ data_in(10)
+        lfsr_c(2) := lfsr_q(0) ^ lfsr_q(1) ^ lfsr_q(2) ^ lfsr_q(3) ^ lfsr_q(4) ^ data_in(0) ^ data_in(2) ^ data_in(3) ^ data_in(6) ^ data_in(7) ^ data_in(8) ^ data_in(9) ^ data_in(10)
+        lfsr_c(3) := lfsr_q(1) ^ lfsr_q(2) ^ lfsr_q(3) ^ lfsr_q(4) ^ data_in(1) ^ data_in(3) ^ data_in(4) ^ data_in(7) ^ data_in(8) ^ data_in(9) ^ data_in(10)
+        lfsr_c(4) := lfsr_q(2) ^ lfsr_q(3) ^ lfsr_q(4) ^ data_in(2) ^ data_in(4) ^ data_in(5) ^ data_in(8) ^ data_in(9) ^ data_in(10)
+
+        lfsr_c
+    }
 
 }
 
@@ -97,10 +133,14 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
     val io = new Bundle {
         val utmi                          = slave(Utmi())
 
+        val sof_frame_nr                  = out(UInt(11 bits))
+
         val rx_valid                      = out(Bool)
         val rx_data                       = out(Bits(8 bits))
 
         val line_state                    = out(Bits(2 bits))
+
+        val enable_hs                     = in(Bool)
 
         // Debug options
         val force_suspend_m               = in(Bool)
@@ -162,6 +202,16 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
     val clock_speed       = 60 MHz
 
     val cyc_fs_suspend  = ((if (isSim) t_fs_suspend_sim  else t_fs_suspend) * clock_speed).toInt
+    val cyc_wtrstfs     = ((if (isSim) t_wtrstfs_sim     else t_wtrstfs)    * clock_speed).toInt
+    val cyc_wtrev       = ((if (isSim) t_wtrev_sim       else t_wtrev)      * clock_speed).toInt
+    val cyc_wtrsths     = ((if (isSim) t_wtrsths_sim     else t_wtrsths)    * clock_speed).toInt
+    val cyc_wtclk       = ((if (isSim) t_wtclk_sim       else t_wtclk)      * clock_speed).toInt
+    val cyc_uch         = ((if (isSim) t_uch_sim         else t_uch)        * clock_speed).toInt
+    val cyc_uchend      = ((if (isSim) t_uchend_sim      else t_uchend)     * clock_speed).toInt
+    val cyc_filtse0     = ((if (isSim) t_filtse0_sim     else t_filtse0)    * clock_speed).toInt
+    val cyc_filt        = ((if (isSim) t_filt_sim        else t_filt)       * clock_speed).toInt
+    val cyc_wtfs        = ((if (isSim) t_wtfs_sim        else t_wtfs)       * clock_speed).toInt
+
 
     val device_fsm = new Area {
 
@@ -310,8 +360,8 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
             val CheckSe0Duration      = newElement()
             val SusSe0Recheck         = newElement()
 
-            val DriveChirpK           = newElement()
-            val StopChirpK            = newElement()
+            val StartChirpK           = newElement()
+            val DriveChirpK            = newElement()
             val WaitChirpK            = newElement()
             val CheckChirpKDuration   = newElement()
             val WaitChirpJ            = newElement()
@@ -361,8 +411,8 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
                     go_to_suspended         := True
                     reset_state             := ResetState.Idle
                 }
-                  .elsewhen(se0_detected && t0_cntr >= (t_wtrstfs * clock_speed).toInt){
-                    reset_state             := ResetState.DriveChirpK
+                .elsewhen(se0_detected && t0_cntr >= cyc_wtrstfs){
+                    reset_state             := ResetState.StartChirpK
                 }
             }
 
@@ -370,7 +420,7 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
                 when(line_state_changed){
                     reset_state             := ResetState.Idle
                 }
-                .elsewhen(t0_cntr >= (t_wtrev * clock_speed).toInt){
+                .elsewhen(t0_cntr >= cyc_wtrev){
                     // FIXME: remove HS terminations, connect FS pullup
                     t1_cntr                 := 0
                     reset_state             := ResetState.HsDecideRstSus
@@ -378,9 +428,9 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
             }
 
             is(ResetState.HsDecideRstSus){
-                when(t1_cntr >= (t_wtrsths * clock_speed).toInt){
+                when(t1_cntr >= cyc_wtrsths){
                     when(se0_detected){
-                        reset_state         := ResetState.DriveChirpK
+                        reset_state         := ResetState.StartChirpK
                     }
                     .otherwise{
                         go_to_suspended       := True
@@ -391,7 +441,7 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
 
             // Wait for the clocks in the UTM to power up and become stable
             is(ResetState.WaitClkStartup){
-                when(t0_cntr >= (t_wtclk * clock_speed).toInt){
+                when(t0_cntr >= cyc_wtclk){
                     t0_cntr                   := 0
                     reset_state               := ResetState.WaitSe0Detect
                 }
@@ -403,7 +453,7 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
                 when(se0_detected){
                     reset_state               := ResetState.CheckSe0Duration
                 }
-                .elsewhen(t0_cntr >= ((t_uchend - t_uch) * clock_speed).toInt){
+                .elsewhen(t0_cntr >= (cyc_uchend - cyc_uch)){
                     reset_state               := ResetState.Idle
                 }
             }
@@ -411,25 +461,27 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
 
             is(ResetState.CheckSe0Duration){
 
-                when(!se0_detected && (t1_cntr < (t_filtse0 * clock_speed).toInt)){
+                when(!se0_detected && (t1_cntr < cyc_filtse0)){
                     reset_state               := ResetState.WaitSe0Detect
                 }
-                .elsewhen(t0_cntr >= ((t_uchend - t_uch) * clock_speed).toInt && (t1_cntr < (t_filtse0 * clock_speed).toInt)){
+                .elsewhen(t0_cntr >= (cyc_uchend - cyc_uch) && (t1_cntr < cyc_filtse0)){
                     reset_state               := ResetState.Idle
                 }
-                .elsewhen(t1_cntr >= (t_filtse0 * clock_speed).toInt){
-                    reset_state               := ResetState.DriveChirpK
+                .elsewhen(t1_cntr >= cyc_filtse0){
+                    reset_state               := ResetState.StartChirpK
                 }
 
+            }
+
+            is(ResetState.StartChirpK){
+                // FIXME: drive ChirpK
+
+                t0_cntr     := 0          // timer T2 is mapped to timer T0
+                reset_state                 := ResetState.DriveChirpK
             }
 
             is(ResetState.DriveChirpK){
-                // FIXME: drive ChirpK
-                t0_cntr     := 0          // timer T2 is mapped to timer T0
-            }
-
-            is(ResetState.StopChirpK){
-                when(t0_cntr >= (t_uch * clock_speed).toInt){
+                when(t0_cntr >= cyc_uch){
                     // FIXME: stop driving ChirpK
                     c0_cntr     := 0
                     t0_cntr     := 0      // timer T3 is mapped to timer T0
@@ -441,7 +493,7 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
             is(ResetState.WaitChirpK){
                 t1_cntr         := 0      // timer T4 is mapped to timer T1
 
-                when(t0_cntr >= (t_wtfs * clock_speed).toInt){
+                when(t0_cntr >= cyc_wtfs){
                     reset_state             := ResetState.FsDefault
                 }
                 .elsewhen(chirp_k_detected){
@@ -450,13 +502,13 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
             }
 
             is(ResetState.CheckChirpKDuration){
-                when(t0_cntr >= (t_wtfs * clock_speed).toInt){
+                when(t0_cntr >= cyc_wtfs){
                     reset_state             := ResetState.FsDefault
                 }
-                .elsewhen(!chirp_k_detected && t1_cntr < (t_filt * clock_speed).toInt){
+                .elsewhen(!chirp_k_detected && t1_cntr < cyc_filt){
                     reset_state             := ResetState.WaitChirpK
                 }
-                .elsewhen(t1_cntr >= (t_filt * clock_speed).toInt){
+                .elsewhen(t1_cntr >= cyc_filt){
                     reset_state             := ResetState.WaitChirpJ
                 }
             }
@@ -464,7 +516,7 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
             is(ResetState.WaitChirpJ){
                 t1_cntr         := 0      // timer T4 is mapped to timer T1
 
-                when(t0_cntr >= (t_wtfs * clock_speed).toInt){
+                when(t0_cntr >= cyc_wtfs){
                     reset_state             := ResetState.FsDefault
                 }
                 .elsewhen(chirp_j_detected){
@@ -473,20 +525,20 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
             }
 
             is(ResetState.CheckChirpJDuration){
-                when(t0_cntr >= (t_wtfs * clock_speed).toInt){
+                when(t0_cntr >= cyc_wtfs){
                     reset_state             := ResetState.FsDefault
                 }
-                .elsewhen(!chirp_k_detected && t1_cntr < (t_filt * clock_speed).toInt){
+                .elsewhen(!chirp_k_detected && t1_cntr < cyc_filt){
                     reset_state             := ResetState.WaitChirpJ
                 }
-                .elsewhen(t1_cntr >= (t_filt * clock_speed).toInt){
+                .elsewhen(t1_cntr >= cyc_filt){
                     c0_cntr                 := c0_cntr + 1
                     reset_state             := ResetState.CheckC0
                 }
             }
 
             is(ResetState.CheckC0){
-                when(t0_cntr >= (t_wtfs * clock_speed).toInt){
+                when(t0_cntr >= cyc_wtfs){
                     reset_state             := ResetState.FsDefault
                 }
                 .elsewhen(c0_cntr < 3){
@@ -553,15 +605,39 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
 
     val rx_fsm = new Area {
 
+        val pid_value       =  io.utmi.data_out(3 downto 0)
+        val pid_value_alt   = ~io.utmi.data_out(7 downto 4)
+        val pid_valid       = pid_value === pid_value_alt
+
+        val cur_frame_nr    = Reg(UInt(11 bits)) init(0)
+        val cur_crc5        = Reg(Bits(5 bits)) init(0)
+
+        val sof_frame_nr    = Reg(UInt(11 bits)) init(0)
+        io.sof_frame_nr     := sof_frame_nr
+
+        val sof_crc5_err_cnt    = Reg(UInt(8 bits)) init(0)
+
         object RxState extends SpinalEnum {
-            val Idle          = newElement()
-            val WaitPid       = newElement()
+            val Idle                    = newElement()
+            val WaitPid                 = newElement()
+            val WaitSof1                = newElement()
+            val WaitSof2                = newElement()
+            val SofCrcCheck             = newElement()
+            val ErrorWaitPacketDone     = newElement()
         }
+
+        val u_crc5 = Crc(CrcKind.usb.crc5, 11)
+        u_crc5.io.input.valid   := False
+        u_crc5.io.input.payload := 0
+        u_crc5.io.flush         := False
 
         val rx_state = Reg(RxState()) init(RxState.Idle)
 
         io.rx_valid   := False
         io.rx_data    := 0
+
+        val sof_crc5_calc = UsbDevice.crc5(cur_frame_nr.asBits)
+        val sof_crc5_match = sof_crc5_calc === cur_crc5
 
         switch(rx_state){
             is(RxState.Idle){
@@ -571,9 +647,64 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
             }
 
             is(RxState.WaitPid){
-                when(io.utmi.rx_valid){
+                // FIXME: deal with error handling
+                when(!io.utmi.rx_active){
+                    rx_state    := RxState.Idle
+                }
+                .elsewhen(io.utmi.rx_valid && !pid_valid){
+                    rx_state    := RxState.ErrorWaitPacketDone
+                }
+                .elsewhen(io.utmi.rx_valid){
                     io.rx_valid     := io.utmi.rx_valid
                     io.rx_data      := io.utmi.data_out
+
+                    switch(pid_value){
+                        is(PidType.SOF.asBits){
+                            u_crc5.io.flush     := True
+                            rx_state            := RxState.WaitSof1
+                        }
+                    }
+                    
+                }
+            }
+            is(RxState.WaitSof1){
+                when(!io.utmi.rx_active){
+                    rx_state        := RxState.Idle
+                }
+                .elsewhen(io.utmi.rx_valid){
+                    cur_frame_nr(7 downto 0)    := io.utmi.data_out.asUInt
+
+                    rx_state        := RxState.WaitSof2
+                }
+            }
+            is(RxState.WaitSof2){
+                when(!io.utmi.rx_active){
+                    rx_state        := RxState.Idle
+                }
+                .elsewhen(io.utmi.rx_valid){
+                    cur_frame_nr(10 downto 8)   := io.utmi.data_out(2 downto 0).asUInt
+
+                    cur_crc5                    := io.utmi.data_out(7 downto 3)  
+
+                    u_crc5.io.input.valid       := True
+                    u_crc5.io.input.payload     := io.utmi.data_out(2 downto 0) ## cur_frame_nr(7 downto 0).asBits
+
+                    rx_state        := RxState.SofCrcCheck
+                }
+            }
+            is(RxState.SofCrcCheck){
+                when(sof_crc5_match){
+                    sof_frame_nr    := cur_frame_nr
+                    rx_state        := RxState.Idle
+                }
+                .otherwise{
+                    sof_crc5_err_cnt    := sof_crc5_err_cnt + 1
+                    rx_state        := RxState.Idle
+                }
+            }
+            is(RxState.ErrorWaitPacketDone){
+                when(!io.utmi.rx_active){
+                    rx_state        := RxState.Idle
                 }
             }
         }
@@ -586,27 +717,43 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
 
     def driveFrom(busCtrl: BusSlaveFactory, baseAddress: BigInt) = new Area {
         
-      val rx_data_valid = busCtrl.createReadOnly(io.rx_valid,       0x0, 0)
-      val rx_data       = busCtrl.createReadOnly(io.rx_data,        0x0, 8)
+      val rx_data_valid = busCtrl.createReadOnly(io.rx_valid,       0x100, 0)
+      val rx_data       = busCtrl.createReadOnly(io.rx_data,        0x100, 8)
         
       rx_data_valid   := io.rx_valid.addTag(crossClockDomain)
       rx_data         := io.rx_data.addTag(crossClockDomain)
+
+      //============================================================
+      // CONFIG 
+      //============================================================
+
+      val enable_hs                 = busCtrl.createReadAndWrite(Bool,              0x00, 0) init(False)
+
+      io.enable_hs                  := BufferCC(enable_hs)
+
+      //============================================================
+      // STATUS 
+      //============================================================
+
+      val sof_frame_nr              = busCtrl.createReadOnly(io.sof_frame_nr,       0x04, 0)
+
+      sof_frame_nr      := io.sof_frame_nr.addTag(crossClockDomain)
 
 
       //============================================================
       // DEBUG 
       //============================================================
-      val force_term_select        = busCtrl.createReadAndWrite(Bool,            0x10, 0) init(False)
-      val force_term_select_value  = busCtrl.createReadAndWrite(Bool,            0x10, 1) init(False)
+      val force_term_select        = busCtrl.createReadAndWrite(Bool,               0x10, 0) init(False)
+      val force_term_select_value  = busCtrl.createReadAndWrite(Bool,               0x10, 1) init(False)
 
-      val force_suspend_m          = busCtrl.createReadAndWrite(Bool,            0x10, 2) init(False)
-      val force_suspend_m_value    = busCtrl.createReadAndWrite(Bool,            0x10, 3) init(True)
+      val force_suspend_m          = busCtrl.createReadAndWrite(Bool,               0x10, 2) init(False)
+      val force_suspend_m_value    = busCtrl.createReadAndWrite(Bool,               0x10, 3) init(True)
 
-      val force_xcvr_select        = busCtrl.createReadAndWrite(Bool,            0x10, 4) init(False)
-      val force_xcvr_select_value  = busCtrl.createReadAndWrite(Bits(2 bits),    0x10, 5) init(0)
+      val force_xcvr_select        = busCtrl.createReadAndWrite(Bool,               0x10, 4) init(False)
+      val force_xcvr_select_value  = busCtrl.createReadAndWrite(Bits(2 bits),       0x10, 5) init(0)
 
-      val force_op_mode            = busCtrl.createReadAndWrite(Bool,            0x10, 7) init(False)
-      val force_op_mode_value      = busCtrl.createReadAndWrite(Bits(2 bits),    0x10, 8) init(0)
+      val force_op_mode            = busCtrl.createReadAndWrite(Bool,               0x10, 7) init(False)
+      val force_op_mode_value      = busCtrl.createReadAndWrite(Bits(2 bits),       0x10, 8) init(0)
 
       io.force_term_select          := force_term_select.addTag(crossClockDomain)
       io.force_term_select_value    := force_term_select_value.addTag(crossClockDomain)

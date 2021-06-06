@@ -44,3 +44,7 @@ async def test_ulpi_simple(dut):
     for i in range(500):
         await FallingEdge(dut.osc_clk_in)
 
+
+    for i in range(2000):
+        await FallingEdge(dut.osc_clk_in)
+

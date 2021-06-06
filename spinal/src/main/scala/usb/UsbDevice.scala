@@ -43,6 +43,11 @@ object UsbDevice {
         )
     }
 
+    object EpStreamType extends SpinalEnum {
+        val Setup       = newElement()
+        val DataIn      = newElement()
+        val DataOut     = newElement()
+    }
 
     // Time to go from FS normal mode to suspend
     val t_fs_suspend        = 3 ms
@@ -93,7 +98,7 @@ object UsbDevice {
     val t_wtfs_sim          = 25 us
 }
 
-case class UsbDevice(isSim : Boolean = false) extends Component {
+case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Component {
 
     import UsbDevice._
     import Utmi._
@@ -105,10 +110,24 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
     val io = new Bundle {
         val utmi                          = slave(Utmi())
 
-        val sof_frame_nr                  = out(UInt(11 bits))
+        // Streaming data interface
+        val ep_stream_req                 = out(Bool)
+        val ep_stream_type                = out(EpStreamType)
+        val ep_stream_endp                = out(UInt(4 bits))
+        val ep_stream_accept              = in(Bool)
+        val ep_stream_reject              = in(Bool)
 
-        val rx_valid                      = out(Bool)
-        val rx_data                       = out(Bits(8 bits))
+        val ep_stream_rd_data_valid       = in(Bool)
+        val ep_stream_rd_data_ready       = out(Bool)
+        val ep_stream_rd_data             = out(Bits(8 bits))
+
+        val ep_stream_wr_data_valid       = out(Bool)
+        val ep_stream_wr_data_ready       = out(Bool)
+        val ep_stream_wr_data             = in(Bits(8 bits))
+
+        val sof_frame_nr                  = out(UInt(11 bits))
+        val token_crc5_err_cnt            = out(UInt(8 bits))     // FIXME: replace this with an incr_cntr
+        val dev_fsm_state                 = out(UInt(3 bits))
 
         val line_state                    = out(Bits(2 bits))
 
@@ -204,6 +223,8 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
 
         val dev_state           = Reg(DeviceState()) init(DeviceState.Attached)
         val pre_suspend_state   = Reg(DeviceState()) init(DeviceState.Attached)
+
+        io.dev_fsm_state  := dev_state.asBits.asUInt
         
         switch(dev_state){
             //============================================================
@@ -542,11 +563,16 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
     // Transaction FSM
     //============================================================
 
+    val cur_token_valid = Reg(Bool) init(False)
+    val cur_token_pid   = Bits(4 bits)
+    val cur_token_addr  = UInt(7 bits)
+    val cur_token_endp  = UInt(4 bits)
+
     val transaction_fsm = new Area {
 
         object TransState extends SpinalEnum {
             val Idle                  = newElement()
-            val GetPid                = newElement()
+            val Setup_Setup           = newElement()
             val SetupSendData0        = newElement()
             val SetupWaitHandshake    = newElement()
         }
@@ -563,6 +589,13 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
                 // IDLE
                 //============================================================
                 is(TransState.Idle){
+                    when(cur_token_valid){
+                        switch(cur_token_pid){
+                            is(PidType.SETUP.asBits){
+                                
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -581,21 +614,27 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
         val pid_value_alt   = ~io.utmi.data_out(7 downto 4)
         val pid_valid       = pid_value === pid_value_alt
 
-        val cur_frame_nr    = Reg(UInt(11 bits)) init(0)
+        val cur_pkt_pid     = Reg(Bits(4 bits)) init(0)
+        val cur_token_data  = Reg(Bits(11 bits)) init(0)
         val cur_crc5        = Reg(Bits(5 bits)) init(0)
+
+        cur_token_pid       := cur_pkt_pid
+        cur_token_addr      := cur_token_data(6 downto 0).asUInt
+        cur_token_endp      := cur_token_data(10 downto 7).asUInt
 
         val sof_frame_nr    = Reg(UInt(11 bits)) init(0)
         io.sof_frame_nr     := sof_frame_nr
 
-        val sof_crc5_err_cnt    = Reg(UInt(8 bits)) init(0)
+        val token_crc5_err_cnt    = Reg(UInt(8 bits)) init(0)
+        io.token_crc5_err_cnt := token_crc5_err_cnt
 
         object RxState extends SpinalEnum {
             val Idle                    = newElement()
             val WaitPid                 = newElement()
-            val WaitSof1                = newElement()
-            val WaitSof2                = newElement()
-            val SofCrcCheck             = newElement()
-            val ErrorWaitPacketDone     = newElement()
+            val WaitToken1              = newElement()
+            val WaitToken2              = newElement()
+            val TokenCrcCheck           = newElement()
+            val WaitPacketDone          = newElement()
         }
 
         val u_crc5 = Crc(CrcKind.usb.crc5, 11)
@@ -605,14 +644,13 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
 
         val rx_state = Reg(RxState()) init(RxState.Idle)
 
-        io.rx_valid   := False
-        io.rx_data    := 0
-
-        val sof_crc5_calc = u_crc5.io.result
-        val sof_crc5_match = sof_crc5_calc === cur_crc5
+        val token_crc5_calc = u_crc5.io.result
+        val token_crc5_match = token_crc5_calc === cur_crc5
 
         switch(rx_state){
             is(RxState.Idle){
+                cur_token_valid     := False
+
                 when(io.utmi.rx_active){
                     rx_state    := RxState.WaitPid
                 }
@@ -624,57 +662,65 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
                     rx_state    := RxState.Idle
                 }
                 .elsewhen(io.utmi.rx_valid && !pid_valid){
-                    rx_state    := RxState.ErrorWaitPacketDone
+                    rx_state    := RxState.WaitPacketDone
                 }
                 .elsewhen(io.utmi.rx_valid){
-                    io.rx_valid     := io.utmi.rx_valid
-                    io.rx_data      := io.utmi.data_out
+                    cur_pkt_pid     := pid_value
 
                     switch(pid_value){
-                        is(PidType.SOF.asBits){
+                        is(PidType.SOF.asBits, PidType.IN.asBits, PidType.OUT.asBits, PidType.SETUP.asBits){
                             u_crc5.io.flush     := True
-                            rx_state            := RxState.WaitSof1
+                            rx_state            := RxState.WaitToken1
                         }
                     }
                     
                 }
             }
-            is(RxState.WaitSof1){
+
+            //============================================================
+            // TOKEN
+            //============================================================
+            is(RxState.WaitToken1){
                 when(!io.utmi.rx_active){
                     rx_state        := RxState.Idle
                 }
                 .elsewhen(io.utmi.rx_valid){
-                    cur_frame_nr(7 downto 0)    := io.utmi.data_out.asUInt
+                    cur_token_data(7 downto 0)  := io.utmi.data_out
 
-                    rx_state        := RxState.WaitSof2
+                    rx_state        := RxState.WaitToken2
                 }
             }
-            is(RxState.WaitSof2){
+            is(RxState.WaitToken2){
                 when(!io.utmi.rx_active){
                     rx_state        := RxState.Idle
                 }
                 .elsewhen(io.utmi.rx_valid){
-                    cur_frame_nr(10 downto 8)   := io.utmi.data_out(2 downto 0).asUInt
-
+                    cur_token_data(10 downto 8) := io.utmi.data_out(2 downto 0)
                     cur_crc5                    := io.utmi.data_out(7 downto 3)  
 
                     u_crc5.io.input.valid       := True
-                    u_crc5.io.input.payload     := io.utmi.data_out(2 downto 0) ## cur_frame_nr(7 downto 0).asBits
+                    u_crc5.io.input.payload     := io.utmi.data_out(2 downto 0) ## cur_token_data(7 downto 0)
 
-                    rx_state        := RxState.SofCrcCheck
+                    rx_state        := RxState.TokenCrcCheck
                 }
             }
-            is(RxState.SofCrcCheck){
-                when(sof_crc5_match){
-                    sof_frame_nr    := cur_frame_nr
-                    rx_state        := RxState.Idle
+            is(RxState.TokenCrcCheck){
+                when(token_crc5_match){
+
+                    when (cur_pkt_pid === PidType.SOF.asBits){
+                        sof_frame_nr    := cur_token_data.asUInt
+                    }
+                    .otherwise{
+                        cur_token_valid := True
+                    }
+                    rx_state        := RxState.WaitPacketDone
                 }
                 .otherwise{
-                    sof_crc5_err_cnt    := sof_crc5_err_cnt + 1
-                    rx_state        := RxState.Idle
+                    token_crc5_err_cnt    := token_crc5_err_cnt + 1
+                    rx_state        := RxState.WaitPacketDone
                 }
             }
-            is(RxState.ErrorWaitPacketDone){
+            is(RxState.WaitPacketDone){
                 when(!io.utmi.rx_active){
                     rx_state        := RxState.Idle
                 }
@@ -689,28 +735,31 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
 
     def driveFrom(busCtrl: BusSlaveFactory, baseAddress: BigInt) = new Area {
         
-      val rx_data_valid = busCtrl.createReadOnly(io.rx_valid,       0x100, 0)
-      val rx_data       = busCtrl.createReadOnly(io.rx_data,        0x100, 8)
-        
-      rx_data_valid   := io.rx_valid.addTag(crossClockDomain)
-      rx_data         := io.rx_data.addTag(crossClockDomain)
-
       //============================================================
       // CONFIG 
       //============================================================
 
       val enable_hs                 = busCtrl.createReadAndWrite(Bool,              0x00, 0) init(False)
 
-      io.enable_hs                  := BufferCC(enable_hs)
+      io.enable_hs                  := enable_hs
 
       //============================================================
       // STATUS 
       //============================================================
 
       val sof_frame_nr              = busCtrl.createReadOnly(io.sof_frame_nr,       0x04, 0)
+      val token_crc5_err_cnt        = busCtrl.createReadOnly(io.token_crc5_err_cnt, 0x04, 12)
 
-      sof_frame_nr      := io.sof_frame_nr.addTag(crossClockDomain)
+      sof_frame_nr        := io.sof_frame_nr
+      token_crc5_err_cnt  := io.token_crc5_err_cnt
 
+      //============================================================
+      // STATE 
+      //============================================================
+      
+      val dev_fsm_state             = busCtrl.createReadOnly(io.dev_fsm_state,      0x08, 0)
+
+      dev_fsm_state     := io.dev_fsm_state
 
       //============================================================
       // DEBUG 
@@ -727,28 +776,43 @@ case class UsbDevice(isSim : Boolean = false) extends Component {
       val force_op_mode            = busCtrl.createReadAndWrite(Bool,               0x10, 7) init(False)
       val force_op_mode_value      = busCtrl.createReadAndWrite(Bits(2 bits),       0x10, 8) init(0)
 
-      io.force_term_select          := force_term_select.addTag(crossClockDomain)
-      io.force_term_select_value    := force_term_select_value.addTag(crossClockDomain)
-      io.force_suspend_m            := force_suspend_m.addTag(crossClockDomain)
-      io.force_suspend_m_value      := force_suspend_m_value.addTag(crossClockDomain)
-      io.force_xcvr_select          := force_xcvr_select.addTag(crossClockDomain)
-      io.force_xcvr_select_value    := force_xcvr_select_value.addTag(crossClockDomain)
-      io.force_op_mode              := force_op_mode.addTag(crossClockDomain)
-      io.force_op_mode_value        := force_op_mode_value.addTag(crossClockDomain)
+      io.force_term_select          := force_term_select
+      io.force_term_select_value    := force_term_select_value
+      io.force_suspend_m            := force_suspend_m
+      io.force_suspend_m_value      := force_suspend_m_value
+      io.force_xcvr_select          := force_xcvr_select
+      io.force_xcvr_select_value    := force_xcvr_select_value
+      io.force_op_mode              := force_op_mode
+      io.force_op_mode_value        := force_op_mode_value
+
+      //============================================================
+      // TEMPORARY 
+      //============================================================
+      
+      /*
+      val rx_data_valid = busCtrl.createReadOnly(io.rx_valid,       0x100, 0)
+      val rx_data       = busCtrl.createReadOnly(io.rx_data,        0x100, 8)
+        
+      rx_data_valid   := io.rx_valid
+      rx_data         := io.rx_data
+      */
+
     }
 
 }
 
 
-case class UsbDeviceTop() extends Component
+case class UsbDeviceWithApb(nrEndpoints : Int, isSim : Boolean) extends Component
 {
     val io = new Bundle {
-        val apb         = slave(Apb3(UsbDevice.getApb3Config()))
+        val utmi          = slave(Utmi())
+        val apb           = slave(Apb3(UsbDevice.getApb3Config()))
     }
 
-    val u_usb_device  = UsbDevice()
-    val busCtrl       = Apb3SlaveFactory(io.apb)
-    val apb_regs      = u_usb_device.driveFrom(busCtrl, 0x0)
+    val u_usb_device  = UsbDevice(nrEndpoints, isSim)
+    u_usb_device.io.utmi      <> io.utmi
+
+    val apb_regs      = u_usb_device.driveFrom(Apb3SlaveFactory(io.apb), 0x0)
 
 }
 
@@ -758,7 +822,7 @@ object UsbDeviceVerilog{
 
         val config = SpinalConfig(anonymSignalUniqueness = true)
         config.includeFormal.generateSystemVerilog({
-            val toplevel = new UsbDeviceTop()
+            val toplevel = new UsbDeviceWithApb(16, false)
             toplevel
         })
         println("DONE")

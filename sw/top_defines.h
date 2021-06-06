@@ -193,6 +193,21 @@
 //============================================================
 // USB DEVICE
 //============================================================
+//
+#define USB_DEV_CONFIG_ADDR            0x00020000
+
+#define USB_DEV_CONFIG_ENABLE_HS_FIELD_START                        0
+#define USB_DEV_CONFIG_ENABLE_HS_FIELD_LENGTH                       1
+
+#define USB_DEV_STATUS_ADDR            0x00020004
+
+#define USB_DEV_STATUS_SOF_FRAME_NR_FIELD_START                     0
+#define USB_DEV_STATUS_SOF_FRAME_NR_FIELD_LENGTH                    1
+
+#define USB_DEV_STATE_ADDR             0x00020008
+
+#define USB_DEV_STATE_DEV_FSM_STATE_FIELD_START                     0
+#define USB_DEV_STATE_DEV_FSM_STATE_FIELD_LENGTH                    4
 
 #define USB_DEV_DEBUG_ADDR             0x00020010
 

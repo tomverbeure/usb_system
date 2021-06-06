@@ -13,6 +13,7 @@ import spinal.lib.com.jtag.Jtag
 
 import max10._
 import usb._
+import cc._
 
 class Top(isSim: Boolean) extends Component 
 {
@@ -206,12 +207,19 @@ class Top(isSim: Boolean) extends Component
         u_utmi2ulpi.io.utmi           <> utmi
         u_utmi2ulpi.io.pll_locked     <> ulpi_pll_locked
 
-        val u_usb_device = new UsbDevice(isSim)
-        u_usb_device.io.utmi          <> utmi
+        //============================================================
+        // USB_DEVICE
+        //============================================================
+        
+        val usb_dev_apb = Apb3(UsbDevice.getApb3Config())
 
-        val usb_dev_apb = new ClockingArea(clkCpuDomain){
-            val apb_regs = u_usb_device.driveFrom(Apb3SlaveFactory(cpu.u_cpu.io.usb_dev_apb), 0x0)
-        }
+        val u_apb2usb_dev = new cc.Apb3CC(UsbDevice.getApb3Config, clkCpuDomain, ClockDomain.current)
+        u_apb2usb_dev.io.src          <> cpu.u_cpu.io.usb_dev_apb
+        u_apb2usb_dev.io.dest         <> usb_dev_apb
+
+        val u_usb_device = new UsbDeviceWithApb(16, isSim)
+        u_usb_device.io.utmi          <> utmi
+        u_usb_device.io.apb           <> usb_dev_apb
 
     }
 

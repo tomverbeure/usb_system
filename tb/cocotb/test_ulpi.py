@@ -7,6 +7,7 @@ from cocotb.triggers import FallingEdge
 
 import ulpi
 import usb
+import pid
 
 @cocotb.test()
 async def test_ulpi_simple(dut):
@@ -44,6 +45,8 @@ async def test_ulpi_simple(dut):
     for i in range(500):
         await FallingEdge(dut.osc_clk_in)
 
+    setup_packet = usb.TokenPacket(pid.PID.SETUP, 0, 0)
+    ulpi_phy.receive(setup_packet)
 
     for i in range(2000):
         await FallingEdge(dut.osc_clk_in)

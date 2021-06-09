@@ -43,18 +43,6 @@ object UsbDevice {
         )
     }
 
-    object EpStreamToken extends SpinalEnum {
-        val Setup       = newElement()
-        val DataIn      = newElement()
-        val DataOut     = newElement()
-
-        defaultEncoding = SpinalEnumEncoding("staticEncoding")(
-            Setup     -> 0x0,
-            DataIn    -> 0x1,
-            DataOut   -> 0x2
-        )
-    }
-
     // Time to go from FS normal mode to suspend
     val t_fs_suspend        = 3 ms
     val t_fs_suspend_sim    = 30 us
@@ -102,39 +90,77 @@ object UsbDevice {
     // is no downstream chirp is detected
     val t_wtfs              = 2.5 ms
     val t_wtfs_sim          = 25 us
+
+
 }
 
+object EpStream {
+    object Request extends SpinalEnum {
+        val None        = newElement()
+        val Setup       = newElement()
+        val DataIn      = newElement()
+        val DataOut     = newElement()
+
+        defaultEncoding = SpinalEnumEncoding("staticEncoding")(
+            None        -> 0x0,
+            Setup       -> 0x1,
+            DataIn      -> 0x2,
+            DataOut     -> 0x3
+        )
+    }
+
+    object Response extends SpinalEnum {
+        val Wait        = newElement()
+        val Ack         = newElement()
+        val Nack        = newElement()
+        val Stall       = newElement()
+
+        defaultEncoding = SpinalEnumEncoding("staticEncoding")(
+            Wait        -> 0x0,
+            Ack         -> 0x1,
+            Nack        -> 0x2,
+            Stall       -> 0x3
+        )
+    }
+}
 
 case class EpStream() extends Bundle with IMasterSlave
 {
-    import UsbDevice._
 
-    val req                 = Bool
-    val token               = Bits(2 bits)
+    val req                 = Bits(2 bits)
     val endp                = UInt(4 bits)
-    val accept              = Bool
-    val reject              = Bool
+    val resp                = Bits(2 bits)
 
+    // FIXME: Use Stream protocol
     val rd_data_valid       = Bool
     val rd_data_ready       = Bool
     val rd_data             = Bits(8 bits)
+    val rd_data_eop         = Bool
+    val rd_data_done        = Bool
+    val rd_data_err         = Bool
 
+    // FIXME: Use Flow protocol
     val wr_data_valid       = Bool
     val wr_data             = Bits(8 bits)
+    val wr_data_done        = Bool
+    val wr_data_err         = Bool
 
     override def asMaster: Unit = {
         out(req)
-        out(token)
         out(endp)
-        in(accept)
-        in(reject)
+        in(resp)
 
         in(rd_data_valid)
         out(rd_data_ready)
         in(rd_data)
+        in(rd_data_eop)
+        out(rd_data_done)
+        out(rd_data_err)
 
         out(wr_data_valid)
         out(wr_data)
+        out(wr_data_done)
+        out(wr_data_err)
     }
 }
 
@@ -233,9 +259,10 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
 
     val dev_addr            = Reg(UInt(7 bits)) init(0)
 
-    val rx_pkt_start        = Bool
-    val rx_pkt_end          = Bool
-    val rx_pkt_active       = Bool
+//    val rx_pkt_start        = Bool
+//    val rx_pkt_end          = Bool
+//    val rx_pkt_active       = Bool
+    val rx_pkt_valid        = Bool
     val rx_pkt_trans_err    = Bool
     val rx_pkt_pid          = Bits(4 bits)
     val rx_pkt_is_token     = Bool
@@ -243,6 +270,11 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
     val rx_pkt_endp         = UInt(4 bits)
     val rx_pkt_is_sof       = Bool
     val rx_pkt_frame_nr     = UInt(11 bits)
+    val rx_pkt_is_data      = Bool
+    val rx_pkt_data_valid   = Bool
+    val rx_pkt_data         = Bits(8 bits)
+    val rx_pkt_data_done    = Bool
+    val rx_pkt_data_err     = Bool
 
     val u_rx_packet = new UsbRxPacket()
     u_rx_packet.io.utmi_rx_active   <> io.utmi.rx_active
@@ -250,9 +282,10 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
     u_rx_packet.io.utmi_rx_error    <> io.utmi.rx_error
     u_rx_packet.io.utmi_rx_data     <> io.utmi.data_out
 
-    u_rx_packet.io.pkt_start        <> rx_pkt_start
-    u_rx_packet.io.pkt_end          <> rx_pkt_end
-    u_rx_packet.io.pkt_active       <> rx_pkt_active
+//    u_rx_packet.io.pkt_start        <> rx_pkt_start
+//    u_rx_packet.io.pkt_end          <> rx_pkt_end
+//    u_rx_packet.io.pkt_active       <> rx_pkt_active
+    u_rx_packet.io.pkt_valid        <> rx_pkt_valid
     u_rx_packet.io.pkt_trans_err    <> rx_pkt_trans_err
     u_rx_packet.io.pkt_pid          <> rx_pkt_pid
     u_rx_packet.io.pkt_is_token     <> rx_pkt_is_token
@@ -260,6 +293,11 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
     u_rx_packet.io.pkt_endp         <> rx_pkt_endp
     u_rx_packet.io.pkt_is_sof       <> io.sof_frame_nr_valid
     u_rx_packet.io.pkt_frame_nr     <> io.sof_frame_nr
+    u_rx_packet.io.pkt_is_data      <> rx_pkt_is_data
+    u_rx_packet.io.pkt_data_valid   <> rx_pkt_data_valid
+    u_rx_packet.io.pkt_data         <> rx_pkt_data
+    u_rx_packet.io.pkt_data_done    <> rx_pkt_data_done
+    u_rx_packet.io.pkt_data_err     <> rx_pkt_data_err
 
     val device_fsm = new Area {
 
@@ -623,21 +661,31 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
     // Transaction FSM
     //============================================================
 
-    io.ep_stream.req            := False
-    io.ep_stream.token          := EpStreamToken.Setup.asBits
-    io.ep_stream.endp           := 0
     io.ep_stream.rd_data_ready  := False
+    io.ep_stream.rd_data_done   := False
+    io.ep_stream.rd_data_err    := False
+
     io.ep_stream.wr_data_valid  := False
-    io.ep_stream.wr_data        := 0
+    io.ep_stream.wr_data        := rx_pkt_data
+    io.ep_stream.wr_data_done   := False
+    io.ep_stream.wr_data_err    := False
 
     val transaction_fsm = new Area {
+
+        val cur_trans_addr      = Reg(UInt(7 bits)) init(0)         // FIXME: not needed?
+        val cur_trans_endp      = Reg(UInt(4 bits)) init(0)
+
+        val ep_stream_req       = Reg(Bits(2 bits)) init(EpStream.Request.None.asBits)
+
+        io.ep_stream.req        := ep_stream_req
+        io.ep_stream.endp       := cur_trans_endp
 
         object TransactionState extends SpinalEnum {
             val Idle                  = newElement()
             val Setup_Setup           = newElement()
-            val Setup_Data            = newElement()
-            val SetupSendData0        = newElement()
-            val SetupWaitHandshake    = newElement()
+            val Setup_WaitDataPkt     = newElement()
+            val Setup_GetData         = newElement()
+            val SendHandshake         = newElement()
         }
 
         utmi_tx_valid     := False
@@ -648,35 +696,65 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
         when(enable_transactions){
     
             switch(trans_state){
-                //============================================================
-                // IDLE
-                //============================================================
                 is(TransactionState.Idle){
-                    when(rx_pkt_is_token){
+                    ep_stream_req        := EpStream.Request.None.asBits
+
+                    when(rx_pkt_valid && rx_pkt_addr === dev_addr){
                         switch(rx_pkt_pid){
                             is(PidType.SETUP.asBits){
-                                when(rx_pkt_addr === dev_addr){
-                                    trans_state     := TransactionState.Setup_Setup
+                                trans_state         := TransactionState.Setup_Setup
 
-                                    io.ep_stream.req      := True
-                                    io.ep_stream.token    := EpStreamToken.Setup.asBits
-                                    io.ep_stream.endp     := rx_pkt_endp
+                                cur_trans_addr      := rx_pkt_addr
+                                cur_trans_endp      := rx_pkt_endp
 
-                                }
-//                                when(PidType.IN.asBits, PidType.OUT.asBits){
-//                                }
+                                ep_stream_req       := EpStream.Request.Setup.asBits
                             }
                         }
                     }
                 }
+
                 is(TransactionState.Setup_Setup){
-                    when(io.ep_stream.accept){
-                        trans_state     := TransactionState.Setup_Data
-                    }
-                    .elsewhen(io.ep_stream.reject){
+                    // A Setup EpStream reponse should always Ack. Don't even
+                    // bother checking...
+                    when(io.ep_stream.resp =/= EpStream.Response.Wait.asBits){
+                        trans_state     := TransactionState.Setup_WaitDataPkt
                     }
                 }
-                is(TransactionState.Setup_Data){
+
+                is(TransactionState.Setup_WaitDataPkt){
+                    when(rx_pkt_valid){
+                        switch(rx_pkt_pid){
+                            is(PidType.DATA0.asBits){
+                                trans_state     := TransactionState.Setup_GetData
+                            }
+                            is(PidType.SOF.asBits){
+                                // An SOF packet can squeeze in between packets of a transaction
+                                trans_state     := TransactionState.Setup_WaitDataPkt
+                            }
+                            default{
+                                trans_state     := TransactionState.Idle
+                            }
+                        }
+                    }
+                }
+                is(TransactionState.Setup_GetData){
+                    when(rx_pkt_data_valid){
+                        io.ep_stream.wr_data_valid  := True
+                    }
+                    .elsewhen(rx_pkt_data_done && rx_pkt_data_err){
+                        io.ep_stream.wr_data_done   := True
+                        io.ep_stream.wr_data_err    := True
+
+                        trans_state                 := TransactionState.Idle
+                    }
+                    .elsewhen(rx_pkt_data_done){
+                        io.ep_stream.wr_data_done   := True
+
+                        trans_state                 := TransactionState.SendHandshake
+                    }
+                }
+
+                is(TransactionState.SendHandshake){
                 }
             }
         }
@@ -691,73 +769,73 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
 
     def driveFrom(busCtrl: BusSlaveFactory, baseAddress: BigInt) = new Area {
         
-      //============================================================
-      // CONFIG 
-      //============================================================
+        //============================================================
+        // CONFIG 
+        //============================================================
+        val config = new Area {
+            val enable_hs               = busCtrl.createReadAndWrite(Bool,              0x00, 0) init(False)
+            io.enable_hs                := enable_hs
+        }
+  
+        //============================================================
+        // STATUS 
+        //============================================================
 
-      val enable_hs                 = busCtrl.createReadAndWrite(Bool,              0x00, 0) init(False)
+        val status = new Area {
+            val sof_frame_nr_reg            = busCtrl.createReadOnly(io.sof_frame_nr,       0x04, 0)
+            val sof_frame_nr                = RegNextWhen(io.sof_frame_nr, io.sof_frame_nr_valid)
+            sof_frame_nr_reg                := sof_frame_nr
+        }
+  
+  
+        //============================================================
+        // STATE 
+        //============================================================
 
-      io.enable_hs                  := enable_hs
-
-      //============================================================
-      // STATUS 
-      //============================================================
-
-
-      val sof_frame_nr_reg          = busCtrl.createReadOnly(io.sof_frame_nr,       0x04, 0)
-
-      val sof_frame_nr      = RegNextWhen(io.sof_frame_nr, io.sof_frame_nr_valid)
-      sof_frame_nr_reg      := sof_frame_nr
-
-//      val token_crc5_err_cnt        = busCtrl.createReadOnly(io.token_crc5_err_cnt, 0x04, 12)
-
-
-//      token_crc5_err_cnt  := io.token_crc5_err_cnt
-
-      //============================================================
-      // STATE 
-      //============================================================
+        val state = new Area {
+            val dev_fsm_state               = busCtrl.createReadOnly(io.dev_fsm_state,      0x08, 0)
+            dev_fsm_state                   := io.dev_fsm_state
+        }
+  
+        //============================================================
+        // DEBUG 
+        //============================================================
+        val debug = new Area {
+            val force_term_select        = busCtrl.createReadAndWrite(Bool,               0x10, 0) init(False)
+            val force_term_select_value  = busCtrl.createReadAndWrite(Bool,               0x10, 1) init(False)
       
-      val dev_fsm_state             = busCtrl.createReadOnly(io.dev_fsm_state,      0x08, 0)
-
-      dev_fsm_state     := io.dev_fsm_state
-
-      //============================================================
-      // DEBUG 
-      //============================================================
-      val force_term_select        = busCtrl.createReadAndWrite(Bool,               0x10, 0) init(False)
-      val force_term_select_value  = busCtrl.createReadAndWrite(Bool,               0x10, 1) init(False)
-
-      val force_suspend_m          = busCtrl.createReadAndWrite(Bool,               0x10, 2) init(False)
-      val force_suspend_m_value    = busCtrl.createReadAndWrite(Bool,               0x10, 3) init(True)
-
-      val force_xcvr_select        = busCtrl.createReadAndWrite(Bool,               0x10, 4) init(False)
-      val force_xcvr_select_value  = busCtrl.createReadAndWrite(Bits(2 bits),       0x10, 5) init(0)
-
-      val force_op_mode            = busCtrl.createReadAndWrite(Bool,               0x10, 7) init(False)
-      val force_op_mode_value      = busCtrl.createReadAndWrite(Bits(2 bits),       0x10, 8) init(0)
-
-      io.force_term_select          := force_term_select
-      io.force_term_select_value    := force_term_select_value
-      io.force_suspend_m            := force_suspend_m
-      io.force_suspend_m_value      := force_suspend_m_value
-      io.force_xcvr_select          := force_xcvr_select
-      io.force_xcvr_select_value    := force_xcvr_select_value
-      io.force_op_mode              := force_op_mode
-      io.force_op_mode_value        := force_op_mode_value
-
-      //============================================================
-      // TEMPORARY 
-      //============================================================
+            val force_suspend_m          = busCtrl.createReadAndWrite(Bool,               0x10, 2) init(False)
+            val force_suspend_m_value    = busCtrl.createReadAndWrite(Bool,               0x10, 3) init(True)
       
-      /*
-      val rx_data_valid = busCtrl.createReadOnly(io.rx_valid,       0x100, 0)
-      val rx_data       = busCtrl.createReadOnly(io.rx_data,        0x100, 8)
-        
-      rx_data_valid   := io.rx_valid
-      rx_data         := io.rx_data
-      */
-
+            val force_xcvr_select        = busCtrl.createReadAndWrite(Bool,               0x10, 4) init(False)
+            val force_xcvr_select_value  = busCtrl.createReadAndWrite(Bits(2 bits),       0x10, 5) init(0)
+      
+            val force_op_mode            = busCtrl.createReadAndWrite(Bool,               0x10, 7) init(False)
+            val force_op_mode_value      = busCtrl.createReadAndWrite(Bits(2 bits),       0x10, 8) init(0)
+      
+            io.force_term_select          := force_term_select
+            io.force_term_select_value    := force_term_select_value
+            io.force_suspend_m            := force_suspend_m
+            io.force_suspend_m_value      := force_suspend_m_value
+            io.force_xcvr_select          := force_xcvr_select
+            io.force_xcvr_select_value    := force_xcvr_select_value
+            io.force_op_mode              := force_op_mode
+            io.force_op_mode_value        := force_op_mode_value
+        }
+  
+        //============================================================
+        // TEMPORARY 
+        //============================================================
+        /*
+        val temp = new Area {
+            val rx_data_valid = busCtrl.createReadOnly(io.rx_valid,       0x100, 0)
+            val rx_data       = busCtrl.createReadOnly(io.rx_data,        0x100, 8)
+          
+            rx_data_valid   := io.rx_valid
+            rx_data         := io.rx_data
+        }
+        */
+  
     }
 
 }
@@ -767,11 +845,13 @@ case class UsbDeviceWithApb(nrEndpoints : Int, isSim : Boolean) extends Componen
 {
     val io = new Bundle {
         val utmi          = slave(Utmi())
+        val ep_stream     = master(EpStream())
         val apb           = slave(Apb3(UsbDevice.getApb3Config()))
     }
 
     val u_usb_device  = UsbDevice(nrEndpoints, isSim)
     u_usb_device.io.utmi      <> io.utmi
+    u_usb_device.io.ep_stream <> io.ep_stream
 
     val apb_regs      = u_usb_device.driveFrom(Apb3SlaveFactory(io.apb), 0x0)
 

@@ -221,6 +221,9 @@ class Top(isSim: Boolean) extends Component
         u_usb_device.io.utmi          <> utmi
         u_usb_device.io.apb           <> usb_dev_apb
 
+        val u_usb_ep_mem = new UsbEpMem(16, isSim)
+        u_usb_ep_mem.io.ep_stream     <> u_usb_device.io.ep_stream
+
     }
 
 }

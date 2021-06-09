@@ -48,6 +48,13 @@ async def test_ulpi_simple(dut):
     setup_packet = usb.TokenPacket(pid.PID.SETUP, 0, 0)
     ulpi_phy.receive(setup_packet)
 
+    for i in range(100):
+        await FallingEdge(dut.osc_clk_in)
+
+    data = bytes([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08])
+    data_packet = usb.DataPacket(pid.PID.DATA0, data)
+    ulpi_phy.receive(data_packet)
+
     for i in range(2000):
         await FallingEdge(dut.osc_clk_in)
 

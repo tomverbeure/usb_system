@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
-[*] Tue Jun  8 06:08:08 2021
+[*] Wed Jun  9 03:06:06 2021
 [*]
 [dumpfile] "/Users/tom/projects/usb_system/tb/cocotb/Top.vcd"
-[dumpfile_mtime] "Tue Jun  8 05:59:27 2021"
-[dumpfile_size] 26261987
+[dumpfile_mtime] "Wed Jun  9 03:06:01 2021"
+[dumpfile_size] 26836889
 [savefile] "/Users/tom/projects/usb_system/tb/cocotb/waves.gtkw"
-[timestart] 0
-[size] 2497 1155
+[timestart] 61700000
+[size] 1920 1200
 [pos] -1 -1
-*-25.000000 50430800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-22.000000 71512800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] Top_wrapper.
 [treeopen] Top_wrapper.u_top.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.
@@ -20,9 +20,9 @@
 [treeopen] Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.
 [treeopen] Top_wrapper.u_top.usb_u_utmi2ulpi.
 [sst_width] 285
-[signals_width] 494
+[signals_width] 652
 [sst_expanded] 1
-[sst_vpaned_height] 617
+[sst_vpaned_height] 644
 @28
 Top_wrapper.osc_clk_in
 Top_wrapper.u_top.cpu_u_cpu.u_cpu.cpu.iBus_cmd_valid
@@ -214,7 +214,7 @@ Top_wrapper.u_top.usb_u_utmi2ulpi.u_utmi2ulpi.cur_state_string[127:0]
 @1401200
 -group_end
 -ulpi_intfc
-@c00200
+@800200
 -utmi_intfc
 @28
 Top_wrapper.u_top.usb_u_utmi2ulpi.io_utmi_rx_active
@@ -243,11 +243,14 @@ Top_wrapper.u_top.usb_u_utmi2ulpi.io_utmi_line_state[1:0]
 (1)Top_wrapper.u_top.usb_u_utmi2ulpi.io_utmi_line_state[1:0]
 @1401200
 -group_end
+@1000200
 -utmi_intfc
-@c00a00
+@800200
 -UsbRxPacket
 @28
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.clk_ulpi
+@820
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.rx_fsm_rx_state_string[151:0]
 @200
 -
 @28
@@ -255,7 +258,8 @@ Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_start
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_end
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_active
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_trans_err
-@22
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_valid
+@23
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_pid[3:0]
 @200
 -
@@ -271,19 +275,31 @@ Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_is_data
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_data_valid
 @22
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_data[7:0]
+@28
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_data_done
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_data_err
 @200
 -
 @28
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_is_sof
 @24
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_frame_nr[10:0]
-@1401a00
+@200
+-
+@28
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.rx_fsm_token_crc5_match
+@22
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.rx_fsm_u_crc5_io_result[4:0]
+@28
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.rx_fsm_data_crc16_match
+@22
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.rx_fsm_u_crc16_io_result[15:0]
+@1000200
 -UsbRxPacket
 @200
 -
 @820
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.device_fsm_dev_state_string[79:0]
-@821
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.transaction_fsm_trans_state_string[143:0]
 [pattern_trace] 1
 [pattern_trace] 0

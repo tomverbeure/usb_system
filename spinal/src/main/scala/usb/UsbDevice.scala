@@ -205,9 +205,6 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
     val utmi_tx_valid     = Bool
     val utmi_tx_data      = Bits(8 bits)
 
-    io.utmi.tx_valid      := utmi_tx_valid
-    io.utmi.data_in       := utmi_tx_data
-
     val utmi_xcvr_select  = Reg(Bits(2 bits)) init(Utmi.XcvrSelect.FS)
     val utmi_term_select  = Reg(Bool) init(True)
     val utmi_suspend_m    = Reg(Bool) init(True)
@@ -259,9 +256,6 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
 
     val dev_addr            = Reg(UInt(7 bits)) init(0)
 
-//    val rx_pkt_start        = Bool
-//    val rx_pkt_end          = Bool
-//    val rx_pkt_active       = Bool
     val rx_pkt_valid        = Bool
     val rx_pkt_trans_err    = Bool
     val rx_pkt_pid          = Bits(4 bits)
@@ -282,9 +276,6 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
     u_rx_packet.io.utmi_rx_error    <> io.utmi.rx_error
     u_rx_packet.io.utmi_rx_data     <> io.utmi.data_out
 
-//    u_rx_packet.io.pkt_start        <> rx_pkt_start
-//    u_rx_packet.io.pkt_end          <> rx_pkt_end
-//    u_rx_packet.io.pkt_active       <> rx_pkt_active
     u_rx_packet.io.pkt_valid        <> rx_pkt_valid
     u_rx_packet.io.pkt_trans_err    <> rx_pkt_trans_err
     u_rx_packet.io.pkt_pid          <> rx_pkt_pid
@@ -298,6 +289,21 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
     u_rx_packet.io.pkt_data         <> rx_pkt_data
     u_rx_packet.io.pkt_data_done    <> rx_pkt_data_done
     u_rx_packet.io.pkt_data_err     <> rx_pkt_data_err
+
+    val tx_pkt_pid          = Bits(4 bits)
+    val tx_pkt_data_valid   = Bool
+    val tx_pkt_data_ready   = Bool
+    val tx_pkt_data         = Bits(8 bits)
+
+    val u_tx_packet = new UsbTxPacket()
+    u_tx_packet.io.utmi_tx_valid    <> io.utmi.tx_valid
+    u_tx_packet.io.utmi_tx_ready    <> io.utmi.tx_ready
+    u_tx_packet.io.utmi_tx_data     <> io.utmi.data_in
+
+    u_tx_packet.io.pkt_pid          <> tx_pkt_pid
+    u_tx_packet.io.pkt_data_valid   <> tx_pkt_data_valid
+    u_tx_packet.io.pkt_data_ready   <> tx_pkt_data_ready
+    u_tx_packet.io.pkt_data         <> tx_pkt_data
 
     val device_fsm = new Area {
 
@@ -665,6 +671,7 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
     io.ep_stream.rd_data_done   := False
     io.ep_stream.rd_data_err    := False
 
+
     io.ep_stream.wr_data_valid  := False
     io.ep_stream.wr_data        := rx_pkt_data
     io.ep_stream.wr_data_done   := False
@@ -688,8 +695,12 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
             val SendHandshake         = newElement()
         }
 
-        utmi_tx_valid     := False
-        utmi_tx_data      := 0
+        utmi_tx_valid       := False
+        utmi_tx_data        := 0
+
+        tx_pkt_pid          := PidType.NULL.asBits
+        tx_pkt_data_valid   := False
+        tx_pkt_data         := io.ep_stream.rd_data
 
         val trans_state = Reg(TransactionState()) init(TransactionState.Idle)
 
@@ -755,6 +766,15 @@ case class UsbDevice(nrEndpoints : Int = 16, isSim : Boolean = false) extends Co
                 }
 
                 is(TransactionState.SendHandshake){
+
+                    tx_pkt_pid      := io.ep_stream.resp.mux(
+                                        EpStream.Response.Ack.asBits       -> (PidType.ACK.asBits),
+                                        EpStream.Response.Nack.asBits      -> (PidType.NAK.asBits),
+                                        EpStream.Response.Stall.asBits     -> (PidType.STALL.asBits),
+                                        default                            -> (PidType.NULL.asBits)
+                                    )
+
+                    trans_state     := TransactionState.Idle
                 }
             }
         }

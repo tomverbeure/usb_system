@@ -21,11 +21,19 @@ case class UsbEpMem(nrEndpoints : Int = 16, isSim : Boolean = false) extends Com
         val ep_stream                     = slave(EpStream())
     }
 
-    io.ep_stream.resp       := EpStream.Response.Wait.asBits
+    val ep_stream_resp = Reg(Bits(2 bits)) init(EpStream.Response.Wait.asBits)
+    io.ep_stream.resp   := ep_stream_resp
+
+    io.ep_stream.rd_data_valid  := True
+    io.ep_stream.rd_data        := 0x5a
+    io.ep_stream.rd_data_eop    := False
 
     switch(io.ep_stream.req){
         is(EpStream.Request.Setup.asBits){
-            io.ep_stream.resp       := EpStream.Response.Ack.asBits
+            ep_stream_resp      := EpStream.Response.Ack.asBits
+        }
+        is(EpStream.Request.DataIn.asBits){
+            ep_stream_resp      := EpStream.Response.Ack.asBits
         }
     }
 

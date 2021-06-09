@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
-[*] Wed Jun  9 03:06:06 2021
+[*] Wed Jun  9 05:52:38 2021
 [*]
 [dumpfile] "/Users/tom/projects/usb_system/tb/cocotb/Top.vcd"
-[dumpfile_mtime] "Wed Jun  9 03:06:01 2021"
-[dumpfile_size] 26836889
+[dumpfile_mtime] "Wed Jun  9 05:50:20 2021"
+[dumpfile_size] 26851932
 [savefile] "/Users/tom/projects/usb_system/tb/cocotb/waves.gtkw"
-[timestart] 61700000
+[timestart] 55120000
 [size] 1920 1200
 [pos] -1 -1
-*-22.000000 71512800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-23.000000 74733200 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] Top_wrapper.
 [treeopen] Top_wrapper.u_top.
 [treeopen] Top_wrapper.u_top.cpu_u_cpu.
@@ -18,6 +18,7 @@
 [treeopen] Top_wrapper.u_top.usb_u_usb_device.
 [treeopen] Top_wrapper.u_top.usb_u_usb_device.u_usb_device.
 [treeopen] Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.
+[treeopen] Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.
 [treeopen] Top_wrapper.u_top.usb_u_utmi2ulpi.
 [sst_width] 285
 [signals_width] 652
@@ -259,7 +260,7 @@ Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_end
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_active
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_trans_err
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_valid
-@23
+@22
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.io_pkt_pid[3:0]
 @200
 -
@@ -298,8 +299,34 @@ Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_rx_packet.rx_fsm_u_crc16_io_re
 -UsbRxPacket
 @200
 -
+@800200
+-UsbTxPacket
+@28
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.clk_ulpi
+@820
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.tx_fsm_tx_state_string[95:0]
+@200
+-
+@22
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.io_pkt_pid[3:0]
+@28
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.io_pkt_data_valid
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.io_pkt_data_ready
+@22
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.io_pkt_data[7:0]
+@200
+-
+@28
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.io_utmi_tx_valid
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.io_utmi_tx_ready
+@22
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.u_tx_packet.io_utmi_tx_data[7:0]
+@1000200
+-UsbTxPacket
+@200
+-
 @820
 Top_wrapper.u_top.usb_u_usb_device.u_usb_device.device_fsm_dev_state_string[79:0]
-Top_wrapper.u_top.usb_u_usb_device.u_usb_device.transaction_fsm_trans_state_string[143:0]
+Top_wrapper.u_top.usb_u_usb_device.u_usb_device.transaction_fsm_trans_state_string[135:0]
 [pattern_trace] 1
 [pattern_trace] 0

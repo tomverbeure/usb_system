@@ -255,15 +255,20 @@ class UlpiPhy:
         return (address, data)
 
     async def _hw_transmit(self):
+        self.dut._log.info("_hw_transmit")
 
         transmit_cmd = self.signals.data2phy.value & ((1<<6)-1)
+        self.dut._log.info("transmit_cmd: 0x%02x" % transmit_cmd)
 
         if transmit_cmd == 0:
-            return self._hw_transmit_no_pid(self)
-        elif (transmit_cmd & 0x30):
-            return self._hw_transmit_pid(self)
+            return await self._hw_transmit_no_pid()
+        elif (transmit_cmd & 0x30) == 0:
+            return await self._hw_transmit_pid()
+        else:
+            self.dut._log.error("Reserved transmit command detected!")
 
     async def _hw_transmit_no_pid(self):
+        self.dut._log.info("_hw_transmit_no_pid")
 
         data = []
 
@@ -282,9 +287,12 @@ class UlpiPhy:
                 return []
             else:
                 # USB transmit successful
-                return data
+                return [None, data]
 
     async def _hw_transmit_pid(self):
+        self.dut._log.info("_hw_transmit_pid")
+
+        data = []
 
         pid = self.signals.data2phy.value & 0x0f
 
@@ -303,7 +311,7 @@ class UlpiPhy:
                 return []
             else:
                 # USB transmit successful
-                return data
+                return [pid, data]
 
     def calc_rxcmd(self, ls, sess_end, sess_valid, vbus_valid, rx_active, rx_valid, rx_error, host_disconnect):
 

@@ -107,11 +107,24 @@ set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  -2.4 [get_ports {ulp
 #**************************************************************
 
 if {1} {
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  6 [get_ports {ulpi_data[*]}] -max
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  6 [get_ports {ulpi_stp}] -max
+# See https://electronics.stackexchange.com/questions/570538/different-output-delays-for-internal-to-output-and-input-to-output-path
 
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_data[*]}] -min
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_stp}] -min
+# 16.6 - 6 - 2.4
+# get_max_delay includes the delay from clock tree.
+set_max_delay -from [get_registers *] -to [get_ports {ulpi_data[*]}] 8.2
+set_max_delay -from [get_registers *] -to [get_ports {ulpi_stp[*]}]  8.2
+
+# 16.6 - 2.4
+# - Not: 16.6 - 9.0 - 2.4, because the 9.0 gets added with the earlier set_input_delay
+# - We need to subtract 2.4 because set_input_delay on ulpi_direction is done with ulpi_clk_phy,
+#   which has a -2.4ns latency.
+set_max_delay -from [get_ports {ulpi_direction}] -to [get_ports {ulpi_data[*]}] 14.2
+
+#set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_data[*]}] -max
+#set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_stp}] -max
+
+#set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_data[*]}] -min
+#set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_stp}] -min
 } else {
 set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  3.6 [get_ports {ulpi_data[*]}] -max
 set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  3.6 [get_ports {ulpi_stp}] -max

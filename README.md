@@ -77,3 +77,8 @@
 * [Digilent Genesys2 - USB Device Demo](https://github.com/Digilent/Genesys2/tree/master/Projects/USB_Device_Demo)
 
     This board has a TUSB1210.
+
+* [Luna](https://github.com/greatscottgadgets/luna/tree/main/luna/gateware/usb)
+
+    Migen-based USB2 and USB3 core.
+

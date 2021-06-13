@@ -134,7 +134,7 @@ set_instance_assignment -name FAST_INPUT_REGISTER OFF -to ulpi_nxt
 set_instance_assignment -name FAST_INPUT_REGISTER OFF -to ulpi_direction
 set_location_assignment PIN_B7 -to led3
 set_instance_assignment -name IO_STANDARD "1.2 V" -to led3
-set_instance_assignment -name PAD_TO_CORE_DELAY 10 -to ulpi_nxt
+set_instance_assignment -name PAD_TO_CORE_DELAY 0 -to ulpi_nxt
 set_global_assignment -name STATE_MACHINE_PROCESSING "USER-ENCODED"
 set_global_assignment -name VERILOG_FILE ../spinal/TopWithoutUlpiPll.syn.v
 set_global_assignment -name SDC_FILE usb_system.sdc

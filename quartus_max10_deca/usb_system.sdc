@@ -15,10 +15,9 @@ create_clock -name {jtag_clk}   -period 50.001 [get_ports {jtag_tck}]
 create_clock -name {ulpi_clk}   -period 16.600 [get_ports {ulpi_clk}]
 
 # ulpi_clk_phy is a virtual clock at the pins of the PHY. There is a 2.4ns delay from the PHY clock pin
-# to the link clock pin. Adding a delay to ulpi_clk, the FPGA clock pin, doesn't seem to work,
-# so I'm adding a -2.4ns 'delay' at the phy clock pin instead.
+# to the link clock pin. 
 create_clock -name {ulpi_clk_phy} -period 16.600 
-set_clock_latency -source -2.4 [get_clocks {ulpi_clk_phy}]
+set_clock_latency -source 2.4 [get_clocks {ulpi_clk}]
 
 create_generated_clock -name cpu_clk -source {pll_u_pll|altpll_component|auto_generated|pll1|inclk[0]} -divide_by 1 -multiply_by 1 { pll_u_pll|altpll_component|auto_generated|pll1|clk[0] }
 
@@ -67,20 +66,17 @@ set_input_delay -add_delay -clock [get_clocks jtag_clk] 0 [get_ports jtag_tms] -
 
 # See https://electronics.stackexchange.com/questions/570538/different-output-delays-for-internal-to-output-and-input-to-output-path
 
-# 16.6 - 6 - 2.4
+# 16.6 - 6 
 # get_max_delay includes the delay from clock tree.
-set_max_delay -from [get_registers *] -to [get_ports {ulpi_data[*]}] 8.2
-set_max_delay -from [get_registers *] -to [get_ports {ulpi_stp}]     8.2
+set_max_delay -from [get_registers *] -to [get_ports {ulpi_data[*]}] 10.6
+set_max_delay -from [get_registers *] -to [get_ports {ulpi_stp}]     10.6
 
-set_min_delay -from [get_registers *] -to [get_ports {ulpi_data[*]}] -2.4
-set_min_delay -from [get_registers *] -to [get_ports {ulpi_stp}]     -2.4
+set_min_delay -from [get_registers *] -to [get_ports {ulpi_data[*]}] 0
+set_min_delay -from [get_registers *] -to [get_ports {ulpi_stp}]     0
 
-# 16.6 - 2.4
-# - Not: 16.6 - 9.0 - 2.4, because the 9.0 gets added with the earlier set_input_delay
-# - We need to subtract 2.4 because set_input_delay on ulpi_direction is done with ulpi_clk_phy,
-#   which has a -2.4ns latency.
-set_max_delay -from [get_ports {ulpi_direction}] -to [get_ports {ulpi_data[*]}] 14.2
-set_min_delay -from [get_ports {ulpi_direction}] -to [get_ports {ulpi_data[*]}] -2.4
+# - Not: 16.6 - 9.0, because the 9.0 gets added with the earlier set_input_delay
+set_max_delay -from [get_ports {ulpi_direction}] -to [get_ports {ulpi_data[*]}] 16.6
+set_min_delay -from [get_ports {ulpi_direction}] -to [get_ports {ulpi_data[*]}] 0
 
 #**************************************************************
 # Set Clock Groups

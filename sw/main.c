@@ -139,10 +139,11 @@ int main()
     jtag_uart_init();
     jtag_uart_tx_str(hello);
 
-    while(!ulpi_pll_locked())
-        ;
-
-    jtag_uart_tx_str("PLL locked.\n");
+    if (REG_RD_FIELD(MISC_STATUS, HAS_ULPI_PLL)){
+        while(!ulpi_pll_locked())
+            ;
+        jtag_uart_tx_str("PLL locked.\n");
+    }
 
     if (!is_sim)
         wait_ms(5000);

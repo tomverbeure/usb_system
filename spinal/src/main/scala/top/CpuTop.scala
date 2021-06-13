@@ -13,8 +13,8 @@ import scala.collection.mutable.ArrayBuffer
 import cc._
 import usb._
 
-case class CpuTop(isSim : Boolean, hasJtagUart : Boolean, hasUart : Boolean) extends Component {
-
+case class CpuTop(isSim: Boolean, hasJtagUart: Boolean, hasUart: Boolean, hasUlpiPll: Boolean) extends Component 
+{
     val io = new Bundle {
         val led_red         = out(Bool)
         val led_green       = out(Bool)
@@ -68,13 +68,15 @@ case class CpuTop(isSim : Boolean, hasJtagUart : Boolean, hasUart : Boolean) ext
     //============================================================
     
     val has_jtag_uart     = (if (hasJtagUart) True else False)
-    val has_uart          = (if (hasUart) True else False)
-    val is_sim            = (if (isSim) True else False)
+    val has_uart          = (if (hasUart)     True else False)
+    val is_sim            = (if (isSim)       True else False)
+    val has_ulpi_pll      = (if (hasUlpiPll)  True else False)
 
-    val u_ctrl = CCMiscCtrlStatus(nrCtrls = 0, nrStatus = 3)
+    val u_ctrl = CCMiscCtrlStatus(nrCtrls = 0, nrStatus = 4)
     u_ctrl.io.status(0)           <> has_jtag_uart
     u_ctrl.io.status(1)           <> has_uart
     u_ctrl.io.status(2)           <> is_sim
+    u_ctrl.io.status(3)           <> has_ulpi_pll
 
     apbMapping += u_ctrl.io.apb -> (0x11000, 4 kB)
 

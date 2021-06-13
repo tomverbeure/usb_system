@@ -1,7 +1,7 @@
 # Makefile
 
 TOPLEVEL_LANG = verilog
-VERILOG_SOURCES = Top_wrapper.v $(shell pwd)/../../spinal/Top.v ../top/jtag_uart.v 
+VERILOG_SOURCES = Top_wrapper.v $(shell pwd)/../../spinal/Top.sim.v ../top/jtag_uart.v 
 TOPLEVEL = Top_wrapper
 MODULE = test_ulpi
 

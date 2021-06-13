@@ -15,7 +15,7 @@ import max10._
 import usb._
 import cc._
 
-class Top(isSim: Boolean) extends Component 
+class Top(isSim: Boolean, withUlpiPll: Boolean = false) extends Component 
 {
     val io = new Bundle {
 
@@ -66,7 +66,7 @@ class Top(isSim: Boolean) extends Component
     //============================================================
     val ulpi_pll_locked   = Bool
 
-    val ulpi_pll = if (isSim) new Area {
+    val ulpi_pll = if (isSim || !withUlpiPll) new Area {
         clk_ulpi          := io.ulpi.clk
         ulpi_pll_locked   := True
     } else new Area {
@@ -177,7 +177,7 @@ class Top(isSim: Boolean) extends Component
     //============================================================
 
     val cpu = new ClockingArea(clkCpuDomain) {
-        val u_cpu = new CpuTop(isSim = isSim, hasJtagUart = !isSim, hasUart = false)
+        val u_cpu = new CpuTop(isSim = isSim, hasJtagUart = !isSim, hasUart = false, hasUlpiPll = withUlpiPll)
         u_cpu.io.led_red        <> io.led0
         u_cpu.io.led_green      <> io.led1
         u_cpu.io.led_blue       <> io.led2
@@ -232,7 +232,10 @@ class Top(isSim: Boolean) extends Component
 object TopVerilogSim {
     def main(args: Array[String]) {
 
-        val config = SpinalConfig(anonymSignalUniqueness = true)
+        val config = SpinalConfig(
+                anonymSignalUniqueness = true,
+                netlistFileName = "Top.sim.v"
+        )
 
         config.generateVerilog({
             val toplevel = new Top(isSim = true)
@@ -242,12 +245,30 @@ object TopVerilogSim {
     }
 }
 
-object TopVerilogSyn {
+object TopVerilogSynWithUlpiPll {
     def main(args: Array[String]) {
 
-        val config = SpinalConfig(anonymSignalUniqueness = true)
+        val config = SpinalConfig(
+                anonymSignalUniqueness = true,
+                netlistFileName = "TopWithUlpiPll.syn.v"
+        )
         config.generateVerilog({
-            val toplevel = new Top(isSim = false)
+            val toplevel = new Top(isSim = false, withUlpiPll = true)
+            InOutWrapper(toplevel)
+            toplevel
+        })
+    }
+}
+
+object TopVerilogSynWithoutUlpiPll {
+    def main(args: Array[String]) {
+
+        val config = SpinalConfig(
+                anonymSignalUniqueness = true,
+                netlistFileName = "TopWithoutUlpiPll.syn.v"
+        )
+        config.generateVerilog({
+            val toplevel = new Top(isSim = false, withUlpiPll = false)
             InOutWrapper(toplevel)
             toplevel
         })

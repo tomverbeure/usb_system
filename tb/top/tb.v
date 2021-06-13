@@ -36,7 +36,9 @@ module tb;
 
     wire led0, led1, led2, button;
 
-    wire       [7:0]    ulpi_data;
+    wire       [7:0]    ulpi_data_read;
+    wire       [7:0]    ulpi_data_write;
+    wire       [7:0]    ulpi_data_writeEnable;
     wire                ulpi_direction;
     wire                ulpi_stp;
     wire                ulpi_nxt;
@@ -51,12 +53,14 @@ module tb;
         .led2(led2),
 
         .ulpi_clk(ulpi_clk),
-        .ulpi_data(ulpi_data),
+        .ulpi_data_read(ulpi_data_read),
+        .ulpi_data_write(ulpi_data_write),
+        .ulpi_data_writeEnable(ulpi_data_writeEnable),
         .ulpi_direction(ulpi_direction),
         .ulpi_stp(ulpi_stp),
         .ulpi_nxt(ulpi_nxt)
     );
-    
+
     reg led0_d, led1_d, led2_d;
 
     always @(posedge clk) begin
@@ -74,6 +78,11 @@ module tb;
         led1_d <= led1;
         led2_d <= led2;
     end
+
+    wire [7:0] ulpi_data;
+
+    assign ulpi_data = ulpi_data_writeEnable[0] ? ulpi_data_write : 8'hz;
+    assign ulpi_data_read = ulpi_data;
 
     ulpi_phy u_ulpi_phy(
         .ulpi_clk           (ulpi_clk),

@@ -11,7 +11,7 @@ set_time_format -unit ns -decimal_places 3
 
 create_clock -name {altera_reserved_tck} -period 100.000  [get_ports {altera_reserved_tck}]
 create_clock -name {osc_clk_in} -period 20.000 [get_ports {osc_clk_in}]
-create_clock -name {jtag_clk}   -period 50.000 [get_ports {jtag_tck}]
+create_clock -name {jtag_clk}   -period 50.001 [get_ports {jtag_tck}]
 create_clock -name {ulpi_clk}   -period 16.600 [get_ports {ulpi_clk}]
 
 # ulpi_clk_phy is a virtual clock at the pins of the PHY. There is a 2.4ns delay from the PHY clock pin
@@ -20,12 +20,7 @@ create_clock -name {ulpi_clk}   -period 16.600 [get_ports {ulpi_clk}]
 create_clock -name {ulpi_clk_phy} -period 16.600 
 set_clock_latency -source -2.4 [get_clocks {ulpi_clk_phy}]
 
-#create_clock -name cpu_clk -period 20.000 [get_pins {pll_u_pll|altpll_component|auto_generated|pll1|clk[0]}]
-#create_clock -name tap_clk -period  5.000 [get_pins {pll_u_pll|altpll_component|auto_generated|pll1|clk[1]}]
-
-create_generated_clock -name cpu_clk           -source {pll_u_pll|altpll_component|auto_generated|pll1|inclk[0]}      -divide_by 1 -multiply_by 1 -duty_cycle 50.00 { pll_u_pll|altpll_component|auto_generated|pll1|clk[0] }
-create_generated_clock -name tap_clk           -source {pll_u_pll|altpll_component|auto_generated|pll1|inclk[0]}      -divide_by 1 -multiply_by 4 -duty_cycle 50.00 { pll_u_pll|altpll_component|auto_generated|pll1|clk[1] }
-create_generated_clock -name ulpi_clk_internal -source {ulpi_pll_u_ulpi_pll|altpll_component|auto_generated|pll1|inclk[0]} -divide_by 1 -multiply_by 1 -duty_cycle 50.00 -phase -52.5 { ulpi_pll_u_ulpi_pll|altpll_component|auto_generated|pll1|clk[0] }
+create_generated_clock -name cpu_clk -source {pll_u_pll|altpll_component|auto_generated|pll1|inclk[0]} -divide_by 1 -multiply_by 1 { pll_u_pll|altpll_component|auto_generated|pll1|clk[0] }
 
 derive_pll_clocks
 derive_clock_uncertainty
@@ -52,7 +47,6 @@ derive_clock_uncertainty
 # Set Input Delay
 #**************************************************************
 
-if {1} {
 set_input_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  9.0 [get_ports {ulpi_data[*]}] -max
 set_input_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  9.0 [get_ports {ulpi_direction}] -max
 set_input_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  9.0 [get_ports {ulpi_nxt}] -max
@@ -60,22 +54,17 @@ set_input_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  9.0 [get_ports {
 set_input_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0.0 [get_ports {ulpi_data[*]}] -min
 set_input_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0.0 [get_ports {ulpi_direction}] -min
 set_input_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0.0 [get_ports {ulpi_nxt}] -min
-} else {
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  6.6 [get_ports {ulpi_data[*]}] -max
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  6.6 [get_ports {ulpi_direction}] -max
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  6.6 [get_ports {ulpi_nxt}] -max
 
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  -2.4 [get_ports {ulpi_data[*]}] -min
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  -2.4 [get_ports {ulpi_direction}] -min
-set_input_delay -add_delay  -clock [get_clocks {ulpi_clk}]  -2.4 [get_ports {ulpi_nxt}] -min
-}
+set_input_delay -add_delay -clock [get_clocks jtag_clk] 2 [get_ports jtag_tdi] -max
+set_input_delay -add_delay -clock [get_clocks jtag_clk] 2 [get_ports jtag_tms] -max
 
+set_input_delay -add_delay -clock [get_clocks jtag_clk] 0 [get_ports jtag_tdi] -min
+set_input_delay -add_delay -clock [get_clocks jtag_clk] 0 [get_ports jtag_tms] -min
 
 #**************************************************************
 # Set Output Delay
 #**************************************************************
 
-if {1} {
 # See https://electronics.stackexchange.com/questions/570538/different-output-delays-for-internal-to-output-and-input-to-output-path
 
 # 16.6 - 6 - 2.4
@@ -83,24 +72,15 @@ if {1} {
 set_max_delay -from [get_registers *] -to [get_ports {ulpi_data[*]}] 8.2
 set_max_delay -from [get_registers *] -to [get_ports {ulpi_stp}]     8.2
 
+set_min_delay -from [get_registers *] -to [get_ports {ulpi_data[*]}] -2.4
+set_min_delay -from [get_registers *] -to [get_ports {ulpi_stp}]     -2.4
+
 # 16.6 - 2.4
 # - Not: 16.6 - 9.0 - 2.4, because the 9.0 gets added with the earlier set_input_delay
 # - We need to subtract 2.4 because set_input_delay on ulpi_direction is done with ulpi_clk_phy,
 #   which has a -2.4ns latency.
 set_max_delay -from [get_ports {ulpi_direction}] -to [get_ports {ulpi_data[*]}] 14.2
-
-#set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_data[*]}] -max
-#set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_stp}] -max
-
-#set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_data[*]}] -min
-#set_output_delay -add_delay  -clock [get_clocks {ulpi_clk_phy}]  0 [get_ports {ulpi_stp}] -min
-} else {
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  3.6 [get_ports {ulpi_data[*]}] -max
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  3.6 [get_ports {ulpi_stp}] -max
-
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  -2.4 [get_ports {ulpi_data[*]}] -min
-set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  -2.4 [get_ports {ulpi_stp}] -min
-}
+set_min_delay -from [get_ports {ulpi_direction}] -to [get_ports {ulpi_data[*]}] -2.4
 
 #**************************************************************
 # Set Clock Groups
@@ -108,17 +88,15 @@ set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  -2.4 [get_ports {ul
 
 set_clock_groups -asynchronous \
 	-group {altera_reserved_tck} \
-	-group {jtag_clk} \
 	-group {osc_clk_in} \
 	-group {ulpi_clk} \
-	-group {cpu_clk} \
-	-group {tap_clk} \
-	-group {ulpi_clk_internal}
+	-group {cpu_clk}
 
 #**************************************************************
 # Set False Path
 #**************************************************************
 
+# JTAG UART
 set_false_path -from [get_registers {*|alt_jtag_atlantic:*|jupdate}] -to [get_registers {*|alt_jtag_atlantic:*|jupdate1*}]
 set_false_path -from [get_registers {*|alt_jtag_atlantic:*|rdata[*]}] -to [get_registers {*|alt_jtag_atlantic*|td_shift[*]}]
 set_false_path -from [get_registers {*|alt_jtag_atlantic:*|read}] -to [get_registers {*|alt_jtag_atlantic:*|read1*}]
@@ -132,6 +110,17 @@ set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [
 set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [get_registers {*|alt_jtag_atlantic:*|t_pause*}]
 set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_valid}] 
 set_false_path -to [get_pins -nocase -compatibility_mode {*|alt_rst_sync_uq1|altera_reset_synchronizer_int_chain*|clrn}]
+
+# FlowCCByToggle synchronization primitive, used in JtagBridge
+set_false_path -from [get_registers *|FlowCCByToggle*|inputArea_target] -to [get_registers *|FlowCCByToggle*|*buffers_0]
+set_false_path -from [get_registers *|FlowCCByToggle*|inputArea_data_fragment*] -to [get_registers *|FlowCCByToggle*|outputArea_flow_regNext_payload_fragment*]
+set_false_path -from [get_registers *|FlowCCByToggle*|inputArea_data_last] -to [get_registers *|FlowCCByToggle*|outputArea_flow_regNext_payload_last]
+
+set_false_path -from [get_registers *|JtagBridge:*|system_rsp_valid]
+set_false_path -from [get_registers *|JtagBridge:*|system_rsp_payload_data*]
+set_false_path -from [get_registers *|JtagBridge:*|system_rsp_payload_error]
+
+set_false_path -from [get_ports ulpi_fault_]
 
 #set_false_path  -to {sld_signaltap:*}
 

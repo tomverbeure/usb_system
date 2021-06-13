@@ -88,6 +88,9 @@
 #define MISC_STATUS_IS_SIM_FIELD_START                  2
 #define MISC_STATUS_IS_SIM_FIELD_LENGTH                 1
 
+#define MISC_STATUS_HAS_ULPI_PLL_FIELD_START            3
+#define MISC_STATUS_HAS_ULPI_PLL_FIELD_LENGTH           1
+
 //============================================================
 // JTAG UART
 //============================================================

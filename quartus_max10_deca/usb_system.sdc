@@ -1,31 +1,3 @@
-## Generated SDC file "/home/tom/projects/usb_system/usb_system.sdc"
-
-## Copyright (C) 2020  Intel Corporation. All rights reserved.
-## Your use of Intel Corporation's design tools, logic functions 
-## and other software and tools, and any partner logic 
-## functions, and any output files from any of the foregoing 
-## (including device programming or simulation files), and any 
-## associated documentation or information are expressly subject 
-## to the terms and conditions of the Intel Program License 
-## Subscription Agreement, the Intel Quartus Prime License Agreement,
-## the Intel FPGA IP License Agreement, or other applicable license
-## agreement, including, without limitation, that your use is for
-## the sole purpose of programming logic devices manufactured by
-## Intel and sold by Intel or its authorized distributors.  Please
-## refer to the applicable agreement for further details, at
-## https://fpgasoftware.intel.com/eula.
-
-
-## VENDOR  "Altera"
-## PROGRAM "Quartus Prime"
-## VERSION "Version 20.1.1 Build 720 11/11/2020 SJ Lite Edition"
-
-## DATE    "Fri May 21 20:36:13 2021"
-
-##
-## DEVICE  "10M50DAF484C6GES"
-##
-
 
 #**************************************************************
 # Time Information
@@ -33,17 +5,14 @@
 
 set_time_format -unit ns -decimal_places 3
 
-
 #**************************************************************
 # Create Clock
 #**************************************************************
 
-create_clock -name {altera_reserved_tck} -period 100.000 -waveform { 0.000 50.000 } [get_ports {altera_reserved_tck}]
-create_clock -name {osc_clk_in} -period 20.000 -waveform { 0.000 10.000 } [get_ports {osc_clk_in}]
-create_clock -name {jtag_clk} -period 50.000 -waveform { 0.0 10 } [get_ports {jtag_tck}]
-
-
-create_clock -name {ulpi_clk} -period 16.600 [get_ports {ulpi_clk}]
+create_clock -name {altera_reserved_tck} -period 100.000  [get_ports {altera_reserved_tck}]
+create_clock -name {osc_clk_in} -period 20.000 [get_ports {osc_clk_in}]
+create_clock -name {jtag_clk}   -period 50.000 [get_ports {jtag_tck}]
+create_clock -name {ulpi_clk}   -period 16.600 [get_ports {ulpi_clk}]
 
 # ulpi_clk_phy is a virtual clock at the pins of the PHY. There is a 2.4ns delay from the PHY clock pin
 # to the link clock pin. Adding a delay to ulpi_clk, the FPGA clock pin, doesn't seem to work,
@@ -112,7 +81,7 @@ if {1} {
 # 16.6 - 6 - 2.4
 # get_max_delay includes the delay from clock tree.
 set_max_delay -from [get_registers *] -to [get_ports {ulpi_data[*]}] 8.2
-set_max_delay -from [get_registers *] -to [get_ports {ulpi_stp[*]}]  8.2
+set_max_delay -from [get_registers *] -to [get_ports {ulpi_stp}]     8.2
 
 # 16.6 - 2.4
 # - Not: 16.6 - 9.0 - 2.4, because the 9.0 gets added with the earlier set_input_delay
@@ -137,8 +106,14 @@ set_output_delay -add_delay  -clock [get_clocks {ulpi_clk}]  -2.4 [get_ports {ul
 # Set Clock Groups
 #**************************************************************
 
-set_clock_groups -asynchronous -group [get_clocks {altera_reserved_tck}] 
-
+set_clock_groups -asynchronous \
+	-group {altera_reserved_tck} \
+	-group {jtag_clk} \
+	-group {osc_clk_in} \
+	-group {ulpi_clk} \
+	-group {cpu_clk} \
+	-group {tap_clk} \
+	-group {ulpi_clk_internal}
 
 #**************************************************************
 # Set False Path
@@ -158,26 +133,11 @@ set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_stalled}] -to [
 set_false_path -from [get_registers {*|alt_jtag_atlantic:*|write_valid}] 
 set_false_path -to [get_pins -nocase -compatibility_mode {*|alt_rst_sync_uq1|altera_reset_synchronizer_int_chain*|clrn}]
 
-set_false_path -from [get_clocks {osc_clk_in}] -to [get_clocks {ulpi_clk}]
-set_false_path -from [get_clocks {ulpi_clk}] -to [get_clocks {osc_clk_in}]
-set_false_path -from [get_clocks {ulpi_clk}] -to [get_clocks {cpu_clk}]
-set_false_path -from [get_clocks {ulpi_clk}] -to [get_clocks {tap_clk}]
-
-set_false_path -from [get_clocks {cpu_clk}] -to [get_clocks {ulpi_clk}]
-set_false_path -from [get_clocks {cpu_clk}] -to [get_clocks {ulpi_clk_internal}]
-
-
-set_false_path -from [get_clocks {ulpi_clk_internal}] -to [get_clocks {cpu_clk}]
-set_false_path -from [get_clocks {ulpi_clk_internal}] -to [get_clocks {tap_clk}]
-
 #set_false_path  -to {sld_signaltap:*}
 
 #**************************************************************
 # Set Multicycle Path
 #**************************************************************
-
-#set_multicycle_path -from {ulpi_direction} -to {ulpi_data[*]} -setup -end 2
-#set_multicycle_path -from {ulpi_direction} -to {ulpi_data[*]} -hold  -end 1
 
 
 #**************************************************************

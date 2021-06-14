@@ -1,0 +1,6 @@
+
+QUARTUS_VERSION = "20.1"
+
+# Revisions
+
+PROJECT_REVISION = "usb_system"

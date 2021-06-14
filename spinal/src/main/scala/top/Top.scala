@@ -70,11 +70,9 @@ class Top(isSim: Boolean, withUlpiPll: Boolean = false) extends Component
         clk_ulpi          := io.ulpi.clk
         ulpi_pll_locked   := True
     } else new Area {
-        clk_ulpi := io.ulpi.clk
-
         val u_ulpi_pll = new ulpi_pll()
         u_ulpi_pll.inclk0      <> io.ulpi.clk
-        //u_ulpi_pll.c0          <> clk_ulpi
+        u_ulpi_pll.c0          <> clk_ulpi
         u_ulpi_pll.locked      <> ulpi_pll_locked
     }
 

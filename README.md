@@ -4,6 +4,7 @@
 * [ULPI Specification 1.1](https://www.sparkfun.com/datasheets/Components/SMD/ULPI_v1_1.pdf)
 * [Microchip/SMSC AN 19.17 - ULPI Design Guide](http://ww1.microchip.com/downloads/en/AppNotes/en562704.pdf)
 * [Making USB Accessible @ Teardown 2019](https://greatscottgadgets.com/slides/making-usb-accessible-teardown-2019.pdf)
+* [Raspberry Pico DAtasheet - USB Description](https://datasheets.raspberrypi.org/rp2040/rp2040-datasheet.pdf#page=403)
 
 ## USB code for FPGAs
 

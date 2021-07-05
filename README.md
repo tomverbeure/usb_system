@@ -12,7 +12,7 @@
 
     * UTMI/ULPI bridge in VHDL
     * GPL2
-    * Limited in functionalit:
+    * Limited in functionality:
         * Doesn't handle register write abort
         * No register read
         * No support for suspend
@@ -31,7 +31,7 @@
 
 * [USBCore](https://github.com/ObKo/USBCore)
 
-    Device controller. Most complete example out there?
+    Device controller. 
 
     Has 2 main branches: 
     * the default one is 'old', which is a VHDL controller. Not updated in 6 years.
@@ -67,10 +67,25 @@
        a very good USB introduction too.
 
 * [Nitro USB Core](https://github.com/no2fpga/no2usb/tree/master)
-    
+
     * USB 1.1 device using FPGA IOs
     * HW: CERN Open Hardware License v2
     * FW: LGPL 3.0
+
+* [Ultra Embedded USB 1.1 Host Controller](https://github.com/ultraembedded/core_usb_host)
+
+    * UTMI interface
+    * AXI4-lite interface
+    * Not compatible with OHCI/EHCI.
+    * Has Linux driver
+    * GPL 3.0
+
+* [Ultra Embedded ULPI Link Wrapper](https://github.com/ultraembedded/core_ulpi_wrapper)
+
+    * UTMI to ULPI converter
+    * No external register interface
+    * SystemC testbench (but not tests?)
+    * GPL 3.0
 
 * [ULPI in OpenVizsla](https://github.com/openvizsla/ov_ftdi/blob/master/software/fpga/ov3/ovhw/ulpi.py)
 

@@ -1,4 +1,17 @@
 
+**THIS PROJECT IS INCOMPLETE!!! DON'T EXPECT ANYTHING HERE TO ACTUALLY WORK.**
+
+I made it public so that others can have a look at it.
+
+Contents and current status:
+
+* SpinalHDL ULPI seems to be working ok.
+* In `./tb/cocotb`, I try to build my first cocotb testbench. It's incomplete...
+* The current design can receive USB packets as a device. I think it can also reply some hardcoded
+  return packets. It's not at the point at all where a device can be enumerated.
+* Further down this file, there's a pretty extensive list with open source USB resources and code.
+
+
 # References
 
 * [ULPI Specification 1.1](https://www.sparkfun.com/datasheets/Components/SMD/ULPI_v1_1.pdf)
